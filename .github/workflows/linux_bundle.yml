@@ -1,7 +1,5 @@
 name: bundle Persepolis Download Manager for linux
-on:
-  release:
-    types: [published]
+on: workflow_dispatch
 jobs:
   bundle-linux:
     runs-on: ubuntu-latest
