@@ -9,7 +9,7 @@ jobs:
       - name: Install dependencies
         run: |
          sudo apt -y update
-         sudo apt -y upgrade
+         # sudo apt -y upgrade
          sudo apt -y install libxcb-cursor0 python3-pip
       - name: Install requirements
         run: pip install PySide6 requests setproctitle psutil yt-dlp pyinstaller
@@ -25,14 +25,14 @@ jobs:
         with:
           repository: "BtbN/FFmpeg-Builds"
           latest: true
-          fileName: "^.*ffmpeg-master-latest-linux64-gpl-shared.*$"
+          fileName: "^.*-master-latest-linux64-gpl-shared.*$"
           extract: true
       - name: Download sthp
         uses: robinraju/release-downloader@v1.10
         with:
           repository: "KaranGauswami/socks-to-http-proxy"
           latest: true
-          fileName: "^.*-linux.*$"
+          fileName: "^.*-linux"
       - name: Preparing Files
         run: ls -lrth
       - name: Build
