@@ -36,5 +36,7 @@ jobs:
           latest: true
           fileName: "^.*-linux.*$"
           extract: true
+      - name: Preparing Files
+        run: ls -lrth
       - name: Build
         run: pyinstaller -n "Persepolis Download Manager" -F --clean --windowed --add-binary "sthp:." --add-binary "aria2c:." --add-binary "ffmpeg:." persepolis/Persepolis\ Download\ Manager.py
