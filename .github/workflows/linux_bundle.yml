@@ -25,7 +25,7 @@ jobs:
         with:
           repository: "BtbN/FFmpeg-Builds"
           latest: true
-          fileName: "^.*-latest-linux64-gpl-.*$"
+          fileName: "^.*ffmpeg-master-latest-linux64-gpl-shared.*$"
           extract: true
       - name: Download sthp
         uses: robinraju/release-downloader@v1.10
@@ -33,7 +33,6 @@ jobs:
           repository: "KaranGauswami/socks-to-http-proxy"
           latest: true
           fileName: "^.*-linux.*$"
-          extract: true
       - name: Preparing Files
         run: ls -lrth
       - name: Build
