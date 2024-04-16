@@ -24,9 +24,9 @@ jobs:
       - name: Download Aria2
         uses: robinraju/release-downloader@v1.10
         with:
-          repository: "aria2/aria2"
+          repository: "q3aql/aria2-static-builds"
           latest: true
-          fileName: "^.*-linux-.*$"
+          fileName: "^.*-linux-gnu-64bit-build1.tar.bz2"
       - name: Download ffmpeg
         uses: robinraju/release-downloader@v1.10
         with:
@@ -43,7 +43,7 @@ jobs:
         run: |
           mv sthp-linux sthp
           tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz ffmpeg-master-latest-linux64-gpl/bin/ffmpeg --strip-components 2
-          unzip -j aria2-*.zip
+          tar -xvjf aria2-*-linux-gnu-64bit-build1.tar.bz2 --strip-components 1
           ls -lrth
       - name: Build
         run: |
