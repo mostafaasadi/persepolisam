@@ -10,7 +10,7 @@ jobs:
         run: |
          sudo apt -y update
          # sudo apt -y upgrade
-         sudo apt -y install python3-venv libxcb-cursor0 libxcb-shape0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 python3-pip xz-utils unzip
+         sudo apt -y install python3-virtualenv libxcb-cursor0 libxcb-shape0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 python3-pip xz-utils unzip
       - name: Virtualenv
         run: | 
           virtualenv venv
