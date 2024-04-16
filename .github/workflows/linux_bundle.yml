@@ -35,7 +35,7 @@ jobs:
         run: |
           ls -lrth
           mv sthp-linux sthp
-          tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz ffmpeg-master-latest-linux64-gpl/bin/ffmpeg
+          tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz ffmpeg-master-latest-linux64-gpl/bin/ffmpeg --strip-components 2
           unzip -j aria2-*.zip
           ls -lrth
 
