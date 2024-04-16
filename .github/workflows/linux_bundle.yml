@@ -10,7 +10,7 @@ jobs:
         run: |
          sudo apt -y update
          # sudo apt -y upgrade
-         sudo apt -y install libxcb-cursor0 python3-pip
+         sudo apt -y install libxcb-cursor0 python3-pip xz-utils unzip
       - name: Install requirements
         run: pip install PySide6 requests setproctitle psutil yt-dlp pyinstaller
       - name: Download Aria2
@@ -19,14 +19,12 @@ jobs:
           repository: "aria2/aria2"
           latest: true
           fileName: "^.*-linux-.*$"
-          extract: true
       - name: Download ffmpeg
         uses: robinraju/release-downloader@v1.10
         with:
           repository: "BtbN/FFmpeg-Builds"
           latest: true
-          fileName: "^.*-master-latest-linux64-gpl-shared.*$"
-          extract: true
+          fileName: "ffmpeg-master-latest-linux64-gpl.tar.xz"
       - name: Download sthp
         uses: robinraju/release-downloader@v1.10
         with:
@@ -34,6 +32,14 @@ jobs:
           latest: true
           fileName: "^.*-linux"
       - name: Preparing Files
-        run: ls -lrth
+        run: |
+          ls -lrth
+          mv sthp-linux sthp
+          tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz bin/ffmpeg
+          unzip -j aria2-*.zip
+
       - name: Build
         run: pyinstaller -n "Persepolis Download Manager" -F --clean --windowed --add-binary "sthp:." --add-binary "aria2c:." --add-binary "ffmpeg:." persepolis/Persepolis\ Download\ Manager.py
+
+      - name: Test
+        run: ./dist/Persepolis\ Download\ Manager --version
