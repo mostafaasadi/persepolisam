@@ -10,7 +10,11 @@ jobs:
         run: |
          sudo apt -y update
          # sudo apt -y upgrade
-         sudo apt -y install libxcb-cursor0 libxcb-shape0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 python3-pip xz-utils unzip
+         sudo apt -y install python3-venv libxcb-cursor0 libxcb-shape0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 python3-pip xz-utils unzip
+      - name: Virtualenv
+        run: | 
+          virtualenv venv
+          source venv/bin/activate
       - name: Install requirements
         run: pip install PySide6 requests setproctitle psutil yt-dlp pyinstaller
       - name: Download Aria2
@@ -37,7 +41,6 @@ jobs:
           tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz ffmpeg-master-latest-linux64-gpl/bin/ffmpeg --strip-components 2
           unzip -j aria2-*.zip
           ls -lrth
-
       - name: Build
         run: |
           pip freeze
