@@ -17,7 +17,7 @@ jobs:
           source venv/bin/activate
           echo PATH=$PATH >> $GITHUB_ENV
       - name: Install requirements
-        run: pip install PySide6 requests setproctitle psutil yt-dlp pyinstaller
+        run: pip install PySide6 PySide6-Addons requests setproctitle psutil yt-dlp pyinstaller
       - name: Download Aria2
         uses: robinraju/release-downloader@v1.10
         with:
