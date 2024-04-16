@@ -49,4 +49,6 @@ jobs:
           ls dist -lrth
     
       - name: Test
-        run: ./dist/Persepolis\ Download\ Manager --version
+        run: |
+          deactivate
+          ./dist/Persepolis\ Download\ Manager --version
