@@ -15,6 +15,7 @@ jobs:
         run: | 
           virtualenv venv
           source venv/bin/activate
+          echo PATH=$PATH >> $GITHUB_ENV
       - name: Install requirements
         run: pip install PySide6 requests setproctitle psutil yt-dlp pyinstaller
       - name: Download Aria2
