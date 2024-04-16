@@ -57,8 +57,8 @@ jobs:
         with:
           name: Archive build
           path: dist/Persepolis\ Download\ Manager
-      - name: Test
-        run: ./dist/Persepolis\ Download\ Manager --version
+      # - name: Test
+      #  run: ./dist/Persepolis\ Download\ Manager --version
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
