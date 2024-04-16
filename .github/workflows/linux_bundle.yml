@@ -59,3 +59,12 @@ jobs:
           path: dist/Persepolis\ Download\ Manager
       - name: Test
         run: ./dist/Persepolis\ Download\ Manager --version
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dist/Persepolis\ Download\ Manager
+          asset_name: Persepolis Download Manager
+          tag: ${{ github.ref }}
+          overwrite: true
+          body: "This is my release text"
