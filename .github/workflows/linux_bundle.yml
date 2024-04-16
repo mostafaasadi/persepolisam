@@ -15,9 +15,10 @@ jobs:
         run: | 
           virtualenv venv
           source venv/bin/activate
-          echo PATH=$PATH >> $GITHUB_ENV
       - name: Install requirements
-        run: pip install PySide6 PySide6-Addons requests setproctitle psutil yt-dlp pyinstaller
+        run: |
+            source venv/bin/activate
+            pip install PySide6 PySide6-Addons requests setproctitle psutil yt-dlp pyinstaller
       - name: Download Aria2
         uses: robinraju/release-downloader@v1.10
         with:
@@ -44,11 +45,10 @@ jobs:
           ls -lrth
       - name: Build
         run: |
+          source venv/bin/activate
           pip freeze
           pyinstaller -n "Persepolis Download Manager" -F --clean --windowed --add-binary "sthp:." --add-binary "aria2c:." --add-binary "ffmpeg:." persepolis/Persepolis\ Download\ Manager.py
           ls dist -lrth
     
       - name: Test
-        run: |
-          deactivate
-          ./dist/Persepolis\ Download\ Manager --version
+        run: ./dist/Persepolis\ Download\ Manager --version
