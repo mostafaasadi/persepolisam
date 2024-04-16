@@ -33,14 +33,16 @@ jobs:
           fileName: "^.*-linux"
       - name: Preparing Files
         run: |
-          ls -lrth
           mv sthp-linux sthp
           tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz ffmpeg-master-latest-linux64-gpl/bin/ffmpeg --strip-components 2
           unzip -j aria2-*.zip
           ls -lrth
 
       - name: Build
-        run: pyinstaller -n "Persepolis Download Manager" -F --clean --windowed --add-binary "sthp:." --add-binary "aria2c:." --add-binary "ffmpeg:." persepolis/Persepolis\ Download\ Manager.py
-
+        run: |
+          pip freeze
+          pyinstaller -n "Persepolis Download Manager" -F --clean --windowed --add-binary "sthp:." --add-binary "aria2c:." --add-binary "ffmpeg:." persepolis/Persepolis\ Download\ Manager.py
+          ls dist -lrth
+    
       - name: Test
         run: ./dist/Persepolis\ Download\ Manager --version
