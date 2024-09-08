@@ -1,0 +1,10 @@
+name: bundle Persepolis Download Manager for windosw
+on: workflow_dispatch
+jobs:
+  bundle-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: persepolisdm/persepolis
