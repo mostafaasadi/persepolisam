@@ -1,7 +1,8 @@
 Arabic:
 Majdi Sobain MajdiSobain
 Saleh Alanazi Sal7_one
-Rayan M rayanm
+rayanm
+Rex_sa rex07
 Simo simonetworking
 明 张 zhuangsha19740612 
 
@@ -53,6 +54,7 @@ dp h huangdp
 Jackson Hu huming2207
 W Z icwaos
 xiang wang ifoanle
+海龙 江 jianghailong
 haha ha jiangweiyang336
 家俊 黄 jiayezhang22
 liu li kulierhao
@@ -76,6 +78,7 @@ rose tiffany rose_tiffany
 CUI SAN sanc163sa
 佳 于 sheena.ringo
 Sin Qiu sino1641
+giga d togiga
 思敏 鲍 tulipasky
 刘 俊君 tusks
 wang yuehu wangyuehu
@@ -96,7 +99,6 @@ long long zql00l
 书罕 向 墨墨墨墨墨
 chuantong xu 徐传统
 00 000 敷衍伤情
-花卷 春 春花卷 
 
 
 German (de):
@@ -109,16 +111,17 @@ Heimen Stoffels Vistaus
 
 
 French (France):
+Cwpute BipBoup cwpute 
 Simon Porte sporte 
 
 
 Hungarian:
-Totya Totya 
+- Totya Totya
 
 
 Korean:
-이정희 (Junghee Lee)
 JungHee Lee MarongHappy
+
 
 Persian (Iran):
 AliReza AmirSamimi alireza_amirsamimi
@@ -133,8 +136,12 @@ Maurycy Błaszczak LuxF3rre
 Arkadiusz Rogóż arcio 
 
 
+Portuguese:
+Antonio Barbosa AlvoErrado2 
+
+
 Portuguese (Brazil): 
-Gersonzao
+Cirnos Gersonzao 
 Carlos Henrique De Freitas Ferreira Neocazen
 Thiago Schuch ThigSchuch
 eltonfabricio10
@@ -142,13 +149,14 @@ Marli Masa marlimasa
 
 
 Russian:
+Victor ViktorOnlin
 Михаил Сомов belliric300
 Nikita Paseka deadman1987
 Pavel irbinix
 Sergey Suhih linuxmasterclub 
 
 
-Spanish:
+Spanish (Spain):
 Edgardo Castro Castro eddy9305
 Jose G. Jimenez S. josegjimenez
 Juan Manuel ptero.4
@@ -160,6 +168,12 @@ Turkish (Turkey):
 Oğuzhan Aksoy OnePage
 abc Def abcmen
 Yaşar Çiv yasarciv67 
+
+
+Turkish:
+abc Def abcmen
+Koray Biçer kbicer
+Yaşar Çiv yasarciv67
 
 
 Chinese (Taiwan):

@@ -25,8 +25,9 @@ except:
     pyside6_is_installed = False
 
 from persepolis.gui import resources
+from persepolis.constants import VERSION
 
-if pyside6_is_installed == True:
+if pyside6_is_installed is True:
     try:
         from PySide6 import QtSvgWidgets
         qtsvg_available = True
@@ -38,7 +39,6 @@ else:
         qtsvg_available = True
     except:
         qtsvg_available = False
-        
 
 
 class AboutWindow_Ui(QWidget):
@@ -101,7 +101,7 @@ class AboutWindow_Ui(QWidget):
 
         self.version_label = QLabel(self.about_tab)
         self.version_label.setAlignment(Qt.AlignCenter)
-
+        self.version_label.setFont(font)
         about_tab_verticalLayout.addWidget(self.version_label)
 
         self.site2_label = QLabel(self.about_tab)
@@ -197,31 +197,26 @@ class AboutWindow_Ui(QWidget):
         self.acknowledgments_title_label.setAlignment(Qt.AlignCenter)
         acknowledgments_verticalLayout.addWidget(self.acknowledgments_title_label)
 
-        self.acknowledgments_aria2c_label = QLabel(self.acknowledgments_tab)
-        self.acknowledgments_aria2c_label.setAlignment(Qt.AlignCenter)
         self.acknowledgments_ffmpeg_label = QLabel(self.acknowledgments_tab)
         self.acknowledgments_ffmpeg_label.setAlignment(Qt.AlignCenter)
         self.acknowledgments_ytdlp_label = QLabel(self.acknowledgments_tab)
         self.acknowledgments_ytdlp_label.setAlignment(Qt.AlignCenter)
-        self.acknowledgments_gost_label = QLabel(self.acknowledgments_tab)
-        self.acknowledgments_gost_label.setAlignment(Qt.AlignCenter)
+        self.acknowledgments_pyton_requests_label = QLabel(self.acknowledgments_tab)
+        self.acknowledgments_pyton_requests_label.setAlignment(Qt.AlignCenter)
+        self.acknowledgments_pyside_label = QLabel(self.acknowledgments_tab)
+        self.acknowledgments_pyside_label.setAlignment(Qt.AlignCenter)
 
-
-        self.acknowledgments_aria2c_label.setFont(font)
         self.acknowledgments_ffmpeg_label.setFont(font)
         self.acknowledgments_ytdlp_label.setFont(font)
-        self.acknowledgments_gost_label.setFont(font)
+        self.acknowledgments_pyside_label.setFont(font)
+        self.acknowledgments_pyton_requests_label.setFont(font)
 
-
-        acknowledgments_verticalLayout.addWidget(self.acknowledgments_aria2c_label)
         acknowledgments_verticalLayout.addWidget(self.acknowledgments_ytdlp_label)
         acknowledgments_verticalLayout.addWidget(self.acknowledgments_ffmpeg_label)
-        acknowledgments_verticalLayout.addWidget(self.acknowledgments_gost_label)
+        acknowledgments_verticalLayout.addWidget(self.acknowledgments_pyton_requests_label)
+        acknowledgments_verticalLayout.addWidget(self.acknowledgments_pyside_label)
+
         acknowledgments_verticalLayout.addStretch(1)
-
-
-
-
 
         # buttons
         button_horizontalLayout = QHBoxLayout()
@@ -239,7 +234,8 @@ class AboutWindow_Ui(QWidget):
 
         # about_tab
         self.title_label.setText(QCoreApplication.translate("about_ui_tr", "Persepolis Download Manager"))
-        self.version_label.setText(QCoreApplication.translate("about_ui_tr", "Version 4.0.1"))
+        self.version_label.setText(QCoreApplication.translate("about_ui_tr", "Version " + VERSION.version_str,
+                                                              "TRANSLATORS NOTE: YOU REALLY DON'T NEED TO TRANSLATE THIS PART!"))
         self.site2_label.setText(QCoreApplication.translate("about_ui_tr",
                                                             "<a href=https://persepolisdm.github.io>https://persepolisdm.github.io</a>",
                                                             "TRANSLATORS NOTE: YOU REALLY DON'T NEED TO TRANSLATE THIS PART!"))
@@ -253,7 +249,7 @@ class AboutWindow_Ui(QWidget):
                                                               "TRANSLATORS NOTE: YOU REALLY DON'T NEED TO TRANSLATE THIS PART!"))
 
         # developers_tab
-        self.developers_title_label.setText(QCoreApplication.translate('about_ui_tr', 'Acknowledgments:'))
+        self.developers_title_label.setText(QCoreApplication.translate('about_ui_tr', 'Developers'))
 
         self.name_label.setText(QCoreApplication.translate("about_ui_tr",
                                                            "\nAliReza AmirSamimi\nMohammadreza Abdollahzadeh\nSadegh Alirezaie\nMostafa Asadi\nJafar Akhondali\nKia Hamedi\nH.Rostami\nEhsan Titish\nMohammadAmin Vahedinia",
@@ -266,17 +262,18 @@ class AboutWindow_Ui(QWidget):
         # Acknowledgments
         self.acknowledgments_title_label.setText(QCoreApplication.translate('about_ui_tr', 'Acknowledgments:'))
 
-        self.acknowledgments_aria2c_label.setText(QCoreApplication.translate("about_ui_tr",
-                                                                           "<a href=https://github.com/aria2/aria2>Aria2c project</a>"))
         self.acknowledgments_ytdlp_label.setText(QCoreApplication.translate("about_ui_tr",
-                                                                           "<a href=https://github.com/yt-dlp/yt-dlp>YT-DLP project</a>"))
+                                                                            "<a href=https://github.com/yt-dlp/yt-dlp>YT-DLP project</a>",
+                                                                            "TRANSLATORS NOTE: YOU REALLY DON'T NEED TO TRANSLATE THIS PART!"))
         self.acknowledgments_ffmpeg_label.setText(QCoreApplication.translate("about_ui_tr",
-                                                                           "<a href=https://github.com/ffmpeg/ffmpeg>FFmpeg project</a>"))
-        self.acknowledgments_gost_label.setText(QCoreApplication.translate("about_ui_tr",
-                                                                           "<a href=https://github.com/ginuerzh/gost>Gost project</a>"))
-
-
-
+                                                                             "<a href=https://github.com/ffmpeg/ffmpeg>FFmpeg project</a>",
+                                                                             "TRANSLATORS NOTE: YOU REALLY DON'T NEED TO TRANSLATE THIS PART!"))
+        self.acknowledgments_pyside_label.setText(QCoreApplication.translate("about_ui_tr",
+                                                                             "<a href=https://wiki.qt.io/Qt_for_Python>Pyside project</a>",
+                                                                             "TRANSLATORS NOTE: YOU REALLY DON'T NEED TO TRANSLATE THIS PART!"))
+        self.acknowledgments_pyton_requests_label.setText(QCoreApplication.translate("about_ui_tr",
+                                                                                     "<a href=https://github.com/psf/requests>Requests project</a>",
+                                                                                     "TRANSLATORS NOTE: YOU REALLY DON'T NEED TO TRANSLATE THIS PART!"))
 
         # License
         self.license_text.setPlainText("""

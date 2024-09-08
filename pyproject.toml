@@ -1,13 +1,13 @@
 [build-system]
-requires = ["mesonpy"]
-build-backend = "meson-python"
+requires = ["meson-python"]
+build-backend = "mesonpy"
 
 [tool.setuptools]
 py-modules = ["persepolis"]
 
 [project]
 name = "persepolis"
-version = "4.0.1"
+version = "5.0.0"
 dependencies = [
   "pyside6",
   "requests",

@@ -46,6 +46,15 @@ except:
     print('Error : requests is not installed!')
     not_installed = not_installed + 'python3-requests, '
 
+# python3-urllib3
+try:
+    import urllib3
+    print('python3-urllib3 is found!')
+except:
+    print('Error : urllib3 is not installed!')
+    not_installed = not_installed + 'python3-urllib3, '
+
+
 # python3-setproctitle
 try:
     import setproctitle
@@ -62,21 +71,13 @@ except:
     print("Warning: python3-psutil is not installed!")
     not_installed = not_installed + 'psutil, '
 
-# youtube_dl
+# yt_dlp
 try:
-    import yt_dlp as youtube_dl
+    import yt_dlp
     print('yt-dlp is found')
 except:
     print('Warning: yt-dlp is not installed!')
     not_installed = not_installed + 'yt-dlp, '
-
-# aria2
-answer = os.system('aria2c --version 1>/dev/null')
-if answer != 0:
-    print("Error aria2 not installed!")
-    not_installed = not_installed + 'aria2c, '
-else:
-    print('aria2 is found!')
 
 # ffmpeg
 answer = os.system('ffmpeg -version 1>/dev/null')
@@ -101,7 +102,6 @@ if os_type == 'Linux' or os_type == 'FreeBSD' or os_type == 'OpenBSD':
         print('Warning: sound-theme-freedesktop is not installed! you need this package for sound notifications!')
         not_installed = not_installed + 'sound-theme-freedesktop'
 
-
     # libnotify-bin
     answer = os.system('notify-send --version 1>/dev/null')
     if answer != 0:
@@ -117,8 +117,6 @@ if os_type == 'Linux' or os_type == 'FreeBSD' or os_type == 'OpenBSD':
         not_installed = not_installed + 'paplay, '
     else:
         print('paplay is found!')
-
-
 
 # show warning , if dependencies not installed!
 if not_installed != '':

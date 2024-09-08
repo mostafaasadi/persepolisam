@@ -28,7 +28,6 @@ from persepolis.scripts.useful_tools import returnDefaultSettings
 from persepolis.scripts import osCommands
 from persepolis.scripts import startup
 import platform
-import sys
 import os
 
 home_address = os.path.expanduser("~")
@@ -74,27 +73,20 @@ class PreferencesWindow(Setting_Ui):
         # initialization
         self.tries_spinBox.setValue(
             int(self.persepolis_setting.value('max-tries')))
+        self.chunk_size_spinBox.setValue(
+            int(self.persepolis_setting.value('chunk-size')))
         self.wait_spinBox.setValue(
             int(self.persepolis_setting.value('retry-wait')))
         self.time_out_spinBox.setValue(
             int(self.persepolis_setting.value('timeout')))
         self.connections_spinBox.setValue(
             int(self.persepolis_setting.value('connections')))
-        self.rpc_port_spinbox.setValue(
-            int(self.persepolis_setting.value('rpc-port')))
 
         # check certificate
         if str(self.persepolis_setting.value('dont-check-certificate')) == 'yes':
             self.dont_check_certificate_checkBox.setChecked(True)
         else:
             self.dont_check_certificate_checkBox.setChecked(False)
-
-        # remote time
-        if str(self.persepolis_setting.value('remote-time')) == 'yes':
-            self.remote_time_checkBox.setChecked(True)
-        else:
-            self.remote_time_checkBox.setChecked(False)
-
 
         # add support for other languages
         locale = str(self.persepolis_setting.value('settings/locale'))
@@ -111,22 +103,6 @@ class PreferencesWindow(Setting_Ui):
             q_time = QTime(0, 0)
 
         self.wait_queue_time.setTime(q_time)
-
-        # change aria2 path
-        self.aria2_path_pushButton.clicked.connect(self.changeAria2Path)
-        self.aria2_path_checkBox.toggled.connect(self.ariaCheckBoxToggled)
-        aria2_path = self.persepolis_setting.value('settings/aria2_path')
-
-        self.aria2_path_lineEdit.setEnabled(False)
-        if aria2_path != None:
-            self.aria2_path_checkBox.setChecked(True)
-            self.aria2_path_lineEdit.setText(str(aria2_path))
-
-        self.ariaCheckBoxToggled('aria2')
-
-        if os_type in OS.UNIX_LIKE:
-            for widget in self.aria2_path_checkBox, self.aria2_path_lineEdit, self.aria2_path_pushButton:
-                widget.hide()
 
         # save_as_tab
         self.download_folder_lineEdit.setText(
@@ -165,7 +141,7 @@ class PreferencesWindow(Setting_Ui):
             self.style_comboBox.setCurrentIndex(current_style_index)
 
         # available language
-        available_language = ['en_US', 'fa_IR','ar', 'es_ES', 'fr_FR', 'ko', 'pl_PL', 'pt', 'ru', 'tr', 'zh_CN', 'de', 'hu', 'nl_NL', 'pt_BR', 'sv', 'tr_TR', 'zh_TW']
+        available_language = ['en_US', 'fa_IR', 'ar', 'es_ES', 'fr_FR', 'ko', 'pl_PL', 'pt', 'ru', 'tr', 'zh_CN', 'de', 'hu', 'nl_NL', 'pt_BR', 'sv', 'tr_TR', 'zh_TW']
         for lang in available_language:
             self.lang_comboBox.addItem(str(QLocale(lang).nativeLanguageName()), lang)
 
@@ -289,6 +265,19 @@ class PreferencesWindow(Setting_Ui):
         else:
             self.keep_awake_checkBox.setChecked(False)
 
+        # check_clipboard_checkBox
+        if str(self.persepolis_setting.value('check-clipboard')) == 'yes':
+            self.check_clipboard_checkBox.setChecked(True)
+        else:
+            self.check_clipboard_checkBox.setChecked(False)
+
+        # When a download request is sent from the browser extension,
+        # the download will start without showing the Add Link window.
+        if str(self.persepolis_setting.value('dont-show-addlinkwindow')) == 'yes':
+            self.dont_show_add_link_window_checkBox.setChecked(True)
+        else:
+            self.dont_show_add_link_window_checkBox.setChecked(False)
+
         # columns_tab
         if str(self.persepolis_setting.value('column0')) == 'yes':
             self.column0_checkBox.setChecked(True)
@@ -404,7 +393,6 @@ class PreferencesWindow(Setting_Ui):
         for member in self.persepolis_setting.allKeys():
             self.first_key_value_dict[member] = str(self.persepolis_setting.value(member))
 
-
         # if style_comboBox is changed, self.styleComboBoxChanged is called.
         self.style_comboBox.currentIndexChanged.connect(self.styleComboBoxChanged)
 
@@ -416,15 +404,15 @@ class PreferencesWindow(Setting_Ui):
 
         # setting window size and position
         size = self.persepolis_setting.value(
-            'PreferencesWindow/size', QSize(578, 565))
+            'PreferencesWindow/size', QSize(578, 597))
         position = self.persepolis_setting.value(
             'PreferencesWindow/position', QPoint(300, 300))
 
         self.resize(size)
         self.move(position)
 
-
     # run this method if user doubleclicks on an item in shortcut_table
+
     def showCaptureKeyboardWindow(self):
 
         # show KeyCapturingWindow
@@ -435,7 +423,7 @@ class PreferencesWindow(Setting_Ui):
 
     def callBack(self, keys):
         # do nothing if keys is empty
-        if not(keys):
+        if not (keys):
             return
 
         # check that if shortcut used before.
@@ -444,7 +432,6 @@ class PreferencesWindow(Setting_Ui):
             self.msgBox.setText(QCoreApplication.translate("setting_src_ui_tr", "<b><center>This shortcut has been used before!\
                     Use another one!</center></b>"))
             self.msgBox.setIcon(QMessageBox.Warning)
-            reply = self.msgBox.exec_()
 
         # set new shortcut
         else:
@@ -487,7 +474,7 @@ class PreferencesWindow(Setting_Ui):
             self.color_comboBox.setEnabled(True)
 
             # color_comboBox items
-            color_scheme = ['Dark Fusion', 'Light Fusion'] 
+            color_scheme = ['Dark Fusion', 'Light Fusion']
 
             # add items
             self.color_comboBox.addItems(color_scheme)
@@ -531,14 +518,14 @@ class PreferencesWindow(Setting_Ui):
         elif selected_style == 'Adwaita' or selected_style == 'macintosh':
             dark_theme = False
 
-        if dark_theme == True:
+        if dark_theme is True:
             self.icon_comboBox.clear()
 
             if selected_size < 48:
                 icons = ['Breeze-Dark', 'Papirus-Dark']
             else:
                 icons = ['Breeze-Dark']
- 
+
             self.icon_comboBox.addItems(icons)
 
             # current_icons_index is -1, if findText couldn't find icon index.
@@ -550,14 +537,13 @@ class PreferencesWindow(Setting_Ui):
 
             self.icon_comboBox.setCurrentIndex(current_icons_index)
 
-        elif dark_theme == False:
+        elif dark_theme is False:
 
             if selected_size < 48:
                 icons = ['Breeze', 'Papirus', 'Papirus-Light']
             else:
                 icons = ['Breeze', 'Papirus']
 
-
             self.icon_comboBox.addItems(icons)
 
             # current_icons_index is -1, if findText couldn't find icon index.
@@ -568,15 +554,14 @@ class PreferencesWindow(Setting_Ui):
                 current_icons_index = 0
 
             self.icon_comboBox.setCurrentIndex(current_icons_index)
-
 
         else:
             if selected_size < 48:
                 icons = ['Breeze', 'Breeze-Dark', 'Papirus',
-                        'Papirus-Dark', 'Papirus-Light']
+                         'Papirus-Dark', 'Papirus-Light']
             else:
                 icons = ['Breeze', 'Breeze-Dark', 'Papirus']
- 
+
             self.icon_comboBox.addItems(icons)
 
             # current_icons_index is -1, if findText couldn't find icon index.
@@ -587,7 +572,6 @@ class PreferencesWindow(Setting_Ui):
                 current_icons_index = 0
 
             self.icon_comboBox.setCurrentIndex(current_icons_index)
-
 
     def fontCheckBoxState(self, checkBox):
 
@@ -604,7 +588,6 @@ class PreferencesWindow(Setting_Ui):
         if event.key() == Qt.Key_Escape:
             self.close()
 
-
     def closeEvent(self, event):
 
         # saving window size and position
@@ -614,7 +597,7 @@ class PreferencesWindow(Setting_Ui):
         self.persepolis_setting.sync()
         event.accept()
 
-        if self.parent.isVisible() == False:
+        if self.parent.isVisible() is False:
             self.parent.minMaxTray(event)
         self.close()
 
@@ -624,27 +607,6 @@ class PreferencesWindow(Setting_Ui):
             self.sound_frame.setEnabled(True)
         else:
             self.sound_frame.setEnabled(False)
-
-    def ariaCheckBoxToggled(self, checkBox):
-
-        if self.aria2_path_checkBox.isChecked():
-            self.aria2_path_pushButton.setEnabled(True)
-        else:
-            self.aria2_path_pushButton.setEnabled(False)
-
-    def changeAria2Path(self, button):
-
-        cwd = sys.argv[0]
-        cwd = os.path.dirname(cwd)
-
-        f_path, filters = QFileDialog.getOpenFileName(
-            self, 'Select aria2 path', cwd)
-
-        # if path is correct:
-        if os.path.isfile(str(f_path)):
-            self.aria2_path_lineEdit.setText(str(f_path))
-        else:
-            self.aria2_path_checkBox.setChecked(False)
 
     def downloadFolderPushButtonClicked(self, button):
 
@@ -673,14 +635,11 @@ class PreferencesWindow(Setting_Ui):
         self.setting_dict = returnDefaultSettings()
 
         self.tries_spinBox.setValue(int(self.setting_dict['max-tries']))
+        self.chunk_size_spinBox.setValue(int(self.setting_dict['chunk-size']))
         self.wait_spinBox.setValue(int(self.setting_dict['retry-wait']))
         self.time_out_spinBox.setValue(int(self.setting_dict['timeout']))
         self.connections_spinBox.setValue(
             int(self.setting_dict['connections']))
-
-        self.rpc_port_spinbox.setValue(int(self.setting_dict['rpc-port']))
-        self.aria2_path_lineEdit.setText('')
-        self.aria2_path_checkBox.setChecked(False)
 
         # wait-queue
         wait_queue_list = self.setting_dict['wait-queue']
@@ -689,9 +648,6 @@ class PreferencesWindow(Setting_Ui):
 
         # dont_check_certificate_checkBox
         self.dont_check_certificate_checkBox.setChecked(False)
-
-        # uncheck remote time 
-        self.remote_time_checkBox.setChecked(False)
 
         # save_as_tab
         self.download_folder_lineEdit.setText(
@@ -775,6 +731,12 @@ class PreferencesWindow(Setting_Ui):
         # keep_awake_checkBox
         self.keep_awake_checkBox.setChecked(False)
 
+        # check clipboard
+        self.check_clipboard_checkBox.setChecked(False)
+
+        # don't show addlinkwindows
+        self.dont_show_add_link_window_checkBox.setChecked(False)
+
         # columns_tab
         self.column0_checkBox.setChecked(True)
         self.column1_checkBox.setChecked(True)
@@ -824,13 +786,13 @@ class PreferencesWindow(Setting_Ui):
         self.persepolis_setting.setValue(
             'max-tries', self.tries_spinBox.value())
         self.persepolis_setting.setValue(
+            'chunk-size', self.chunk_size_spinBox.value())
+        self.persepolis_setting.setValue(
             'retry-wait', self.wait_spinBox.value())
         self.persepolis_setting.setValue(
             'timeout', self.time_out_spinBox.value())
         self.persepolis_setting.setValue(
             'connections', self.connections_spinBox.value())
-        self.persepolis_setting.setValue(
-            'rpc-port', self.rpc_port_spinbox.value())
         self.persepolis_setting.setValue(
             'download_path', self.download_folder_lineEdit.text())
         self.persepolis_setting.setValue(
@@ -840,26 +802,19 @@ class PreferencesWindow(Setting_Ui):
         self.persepolis_setting.setValue(
             'wait-queue', self.wait_queue_time.text().split(':'))
 
-        # change aria2_path
-        if self.aria2_path_checkBox.isChecked():
-            self.persepolis_setting.setValue('settings/aria2_path', str(self.aria2_path_lineEdit.text()))
-
         # don't check certificate
         if self.dont_check_certificate_checkBox.isChecked():
             self.persepolis_setting.setValue('dont-check-certificate', 'yes')
         else:
             self.persepolis_setting.setValue('dont-check-certificate', 'no')
 
-        # remote time 
-        if self.remote_time_checkBox.isChecked():
-            self.persepolis_setting.setValue('remote-time', 'yes')
+        # don't show addlinkwindows
+        if self.dont_show_add_link_window_checkBox.isChecked():
+            self.persepolis_setting.setValue('dont-show-addlinkwindow', 'yes')
         else:
-            self.persepolis_setting.setValue('remote-time', 'no')
-
-
+            self.persepolis_setting.setValue('dont-show-addlinkwindow', 'no')
 
         # changing icons
-
         icons = self.icon_comboBox.currentText()
         self.persepolis_setting.setValue('icons', icons)
 
@@ -975,7 +930,7 @@ class PreferencesWindow(Setting_Ui):
         if self.startup_checkbox.isChecked():
             self.persepolis_setting.setValue('startup', 'yes')
 
-            if not(startup.checkStartUp()):  # checking existence of Persepolis in  system's startup
+            if not (startup.checkStartUp()):  # checking existence of Persepolis in  system's startup
 
                 startup.addStartUp(self.parent)  # adding Persepolis to system's startup
         else:
@@ -992,6 +947,12 @@ class PreferencesWindow(Setting_Ui):
         else:
             self.persepolis_setting.setValue('awake', 'no')
             self.parent.keep_awake_checkBox.setChecked(False)
+
+        # check_clipboard_checkBox
+        if self.check_clipboard_checkBox.isChecked():
+            self.persepolis_setting.setValue('check-clipboard', 'yes')
+        else:
+            self.persepolis_setting.setValue('check-clipboard', 'no')
 
         # this section  creates download folder and
         # download sub folders if they did not existed.
@@ -1160,7 +1121,12 @@ class PreferencesWindow(Setting_Ui):
         show_message_box = False
         for key in self.first_key_value_dict.keys():
             if self.first_key_value_dict[key] != self.second_key_value_dict[key]:
-                if key in ['locale', 'aria2_path', 'download_path', 'custom-font', 'rpc-port', 'max-tries', 'retry-wait', 'timeout', 'connections', 'style', 'font', 'font-size', 'color-scheme']:
+                if key in ['locale', 'download_path',
+                           'custom-font', 'max-tries', 'chunk-size',
+                           'retry-wait', 'timeout', 'connections',
+                           'style', 'font', 'font-size', 'color-scheme',
+                           'check-clipboard']:
+
                     show_message_box = True
 
         # if any thing changed that needs restarting, then notify user about "Some changes take effect after restarting persepolis"

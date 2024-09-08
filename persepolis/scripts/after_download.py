@@ -82,7 +82,7 @@ class AfterDownloadWindow(AfterDownloadWindow_Ui):
 
         # set window size and position
         size = self.persepolis_setting.value(
-            'AfterDownloadWindow/size', QSize(570, 290))
+            'AfterDownloadWindow/size', QSize(659, 300))
         position = self.persepolis_setting.value(
             'AfterDownloadWindow/position', QPoint(300, 300))
         self.resize(size)
@@ -128,7 +128,6 @@ class AfterDownloadWindow(AfterDownloadWindow_Ui):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
             self.close()
-
 
     def closeEvent(self, event):
         # saving window size and position

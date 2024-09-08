@@ -52,10 +52,10 @@ class AddLinkSpiderThread(QThread):
             self.ADDLINKSPIDERSIGNAL.emit(spider_dict)
 
             # write an ERROR in log, If spider couldn't find file_name or file_size.
-            if not(file_name):
+            if not (file_name):
                 logger.sendToLog(
                     "Spider couldn't find file name", "ERROR")
-            if not(file_size):
+            if not (file_size):
                 logger.sendToLog(
                     "Spider couldn't find file size", "ERROR")
         except Exception as e:
@@ -66,7 +66,7 @@ class AddLinkSpiderThread(QThread):
 
 
 class AddLinkWindow(AddLinkWindow_Ui):
-    def __init__(self, parent, callback, persepolis_setting, socks5_to_http_convertor_is_installed, plugin_add_link_dictionary={}):
+    def __init__(self, parent, callback, persepolis_setting, plugin_add_link_dictionary={}):
         super().__init__(persepolis_setting)
         self.callback = callback
         self.plugin_add_link_dictionary = plugin_add_link_dictionary
@@ -141,12 +141,6 @@ class AddLinkWindow(AddLinkWindow_Ui):
         settings_proxy_type = self.persepolis_setting.value(
             'add_link_initialization/proxy_type', None)
 
-        # default is http
-        if not(socks5_to_http_convertor_is_installed):
-            self.socks5_radioButton.setEnabled(False)
-        else:
-            self.socks5_radioButton.setEnabled(True)
-
         if settings_proxy_type == 'socks5':
 
             self.socks5_radioButton.setChecked(True)
@@ -156,7 +150,7 @@ class AddLinkWindow(AddLinkWindow_Ui):
 
         else:
             self.http_radioButton.setChecked(True)
- 
+
         # get categories name and add them to add_queue_comboBox
         categories_list = self.parent.persepolis_db.categoriesList()
         for queue in categories_list:
@@ -184,9 +178,6 @@ class AddLinkWindow(AddLinkWindow_Ui):
 
         self.download_frame.setEnabled(False)
         self.download_checkBox.toggled.connect(self.downloadFrame)
-
-        self.limit_frame.setEnabled(False)
-        self.limit_checkBox.toggled.connect(self.limitFrame)
 
         self.start_frame.setEnabled(False)
         self.start_checkBox.toggled.connect(self.startFrame)
@@ -226,16 +217,13 @@ class AddLinkWindow(AddLinkWindow_Ui):
 
 # set window size and position
         size = self.persepolis_setting.value(
-            'AddLinkWindow/size', QSize(520, 425))
+            'AddLinkWindow/size', QSize(652, 480))
         position = self.persepolis_setting.value(
             'AddLinkWindow/position', QPoint(300, 300))
         self.resize(size)
         self.move(position)
 
-
 # detect system proxy setting, and set ip_lineEdit and port_spinBox
-
-
     def detectProxy(self, button):
         # get system proxy information
         system_proxy_dict = getProxy()
@@ -260,39 +248,31 @@ class AddLinkWindow(AddLinkWindow_Ui):
             self.proxy_checkBox.setChecked(False)
             self.detect_proxy_label.setText('No proxy detected!')
 
-
 # active frames if checkBoxes are checked
     def proxyFrame(self, checkBox):
 
-        if self.proxy_checkBox.isChecked() == True:
+        if self.proxy_checkBox.isChecked() is True:
             self.proxy_frame.setEnabled(True)
         else:
             self.proxy_frame.setEnabled(False)
 
     def downloadFrame(self, checkBox):
 
-        if self.download_checkBox.isChecked() == True:
+        if self.download_checkBox.isChecked() is True:
             self.download_frame.setEnabled(True)
         else:
             self.download_frame.setEnabled(False)
 
-    def limitFrame(self, checkBox):
-
-        if self.limit_checkBox.isChecked() == True:
-            self.limit_frame.setEnabled(True)
-        else:
-            self.limit_frame.setEnabled(False)
-
     def startFrame(self, checkBox):
 
-        if self.start_checkBox.isChecked() == True:
+        if self.start_checkBox.isChecked() is True:
             self.start_frame.setEnabled(True)
         else:
             self.start_frame.setEnabled(False)
 
     def endFrame(self, checkBox):
 
-        if self.end_checkBox.isChecked() == True:
+        if self.end_checkBox.isChecked() is True:
             self.end_frame.setEnabled(True)
         else:
             self.end_frame.setEnabled(False)
@@ -335,7 +315,7 @@ class AddLinkWindow(AddLinkWindow_Ui):
 
 # enable change_name_lineEdit if change_name_checkBox is checked.
     def changeName(self, checkBoxes):
-        if self.change_name_checkBox.isChecked() == True:
+        if self.change_name_checkBox.isChecked() is True:
             self.change_name_lineEdit.setEnabled(True)
         else:
             self.change_name_lineEdit.setEnabled(False)
@@ -369,13 +349,13 @@ class AddLinkWindow(AddLinkWindow_Ui):
             'add_link_initialization/download_user', self.download_user_lineEdit.text())
 
         # http, https or socks5 proxy
-        if self.http_radioButton.isChecked() == True:
+        if self.http_radioButton.isChecked() is True:
 
             proxy_type = 'http'
             self.persepolis_setting.setValue(
                 'add_link_initialization/proxy_type', 'http')
 
-        elif self.https_radioButton.isChecked() == True:
+        elif self.https_radioButton.isChecked() is True:
 
             proxy_type = 'https'
             self.persepolis_setting.setValue(
@@ -388,12 +368,12 @@ class AddLinkWindow(AddLinkWindow_Ui):
                 'add_link_initialization/proxy_type', 'socks5')
 
         # Check 'Remember path' and change default path if needed
-        if self.folder_checkBox.isChecked() == True:
+        if self.folder_checkBox.isChecked() is True:
             self.persepolis_setting.setValue(
                 'settings/download_path', self.download_folder_lineEdit.text())
 
         # get proxy information
-        if not(self.proxy_checkBox.isChecked()):
+        if not (self.proxy_checkBox.isChecked()):
             ip = None
             port = None
             proxy_user = None
@@ -401,50 +381,41 @@ class AddLinkWindow(AddLinkWindow_Ui):
             proxy_type = None
         else:
             ip = self.ip_lineEdit.text()
-            if not(ip):
+            if not (ip):
                 ip = None
 
             port = self.port_spinBox.value()
-            if not(port):
+            if not (port):
                 port = None
 
             proxy_user = self.proxy_user_lineEdit.text()
-            if not(proxy_user):
+            if not (proxy_user):
                 proxy_user = None
 
             proxy_passwd = self.proxy_pass_lineEdit.text()
-            if not(proxy_passwd):
+            if not (proxy_passwd):
                 proxy_passwd = None
 
         # get download username and password information
-        if not(self.download_checkBox.isChecked()):
+        if not (self.download_checkBox.isChecked()):
             download_user = None
             download_passwd = None
         else:
             download_user = self.download_user_lineEdit.text()
-            if not(download_user):
+            if not (download_user):
                 download_user = None
             download_passwd = self.download_pass_lineEdit.text()
-            if not(download_passwd):
+            if not (download_passwd):
                 download_passwd = None
 
-        # check that if user limits download speed.
-        if not(self.limit_checkBox.isChecked()):
-            limit = 0
-        else:
-            if self.limit_comboBox.currentText() == "KiB/s":
-                limit = str(self.limit_spinBox.value()) + str("K")
-            else:
-                limit = str(self.limit_spinBox.value()) + str("M")
-
         # get start time for download if user set that.
-        if not(self.start_checkBox.isChecked()):
+        if not (self.start_checkBox.isChecked()):
             start_time = None
         else:
             start_time = self.start_time_qDataTimeEdit.text()
 
         # get end time for download if user set that.
-        if not(self.end_checkBox.isChecked()):
+        if not (self.end_checkBox.isChecked()):
             end_time = None
         else:
             end_time = self.end_time_qDateTimeEdit.text()
@@ -493,7 +464,7 @@ class AddLinkWindow(AddLinkWindow_Ui):
                                     'out': out, 'start_time': start_time, 'end_time': end_time, 'link': link, 'ip': ip,
                                     'port': port, 'proxy_user': proxy_user, 'proxy_passwd': proxy_passwd, 'proxy_type': proxy_type,
                                     'download_user': download_user, 'download_passwd': download_passwd,
-                                    'connections': connections, 'limit_value': limit, 'download_path': download_path}
+                                    'connections': connections, 'limit_value': 10, 'download_path': download_path}
 
         # get category of download
         category = str(self.add_queue_comboBox.currentText())
@@ -511,8 +482,8 @@ class AddLinkWindow(AddLinkWindow_Ui):
         if event.key() == Qt.Key_Escape:
             self.close()
 
-
     # save size and position of window, when user closes the window.
+
     def closeEvent(self, event):
         self.persepolis_setting.setValue('AddLinkWindow/size', self.size())
         self.persepolis_setting.setValue('AddLinkWindow/position', self.pos())

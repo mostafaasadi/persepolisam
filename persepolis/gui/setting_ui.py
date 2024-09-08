@@ -25,6 +25,7 @@ except:
 from persepolis.gui.customized_widgets import MyQDateTimeEdit
 from persepolis.gui import resources
 
+
 class KeyCapturingWindow_Ui(QWidget):
     def __init__(self, persepolis_setting):
         super().__init__()
@@ -150,6 +151,7 @@ class Setting_Ui(QWidget):
         time_out_horizontalLayout.addWidget(self.time_out_label)
 
         self.time_out_spinBox = QSpinBox(self.download_options_tab)
+        self.time_out_spinBox.setMinimum(1)
         time_out_horizontalLayout.addWidget(self.time_out_spinBox)
 
         download_options_tab_verticalLayout.addLayout(time_out_horizontalLayout)
@@ -162,23 +164,22 @@ class Setting_Ui(QWidget):
 
         self.connections_spinBox = QSpinBox(self.download_options_tab)
         self.connections_spinBox.setMinimum(1)
-        self.connections_spinBox.setMaximum(16)
+        self.connections_spinBox.setMaximum(64)
         connections_horizontalLayout.addWidget(self.connections_spinBox)
 
         download_options_tab_verticalLayout.addLayout(connections_horizontalLayout)
 
-        # rpc_port
-        self.rpc_port_label = QLabel(self.download_options_tab)
-        self.rpc_horizontalLayout = QHBoxLayout()
-        self.rpc_horizontalLayout.addWidget(self.rpc_port_label)
+        # chunk_size
+        chunk_size_horizontalLayout = QHBoxLayout()
+        self.chunk_size_label = QLabel(self.download_options_tab)
+        chunk_size_horizontalLayout.addWidget(self.chunk_size_label)
 
-        self.rpc_port_spinbox = QSpinBox(self.download_options_tab)
-        self.rpc_port_spinbox.setMinimum(1024)
-        self.rpc_port_spinbox.setMaximum(65535)
-        self.rpc_horizontalLayout.addWidget(self.rpc_port_spinbox)
+        self.chunk_size_spinBox = QSpinBox(self.download_options_tab)
+        self.chunk_size_spinBox.setMinimum(1)
+        self.chunk_size_spinBox.setMaximum(1024)
+        chunk_size_horizontalLayout.addWidget(self.chunk_size_spinBox)
 
-        download_options_tab_verticalLayout.addLayout(
-            self.rpc_horizontalLayout)
+        download_options_tab_verticalLayout.addLayout(chunk_size_horizontalLayout)
 
         # wait_queue
         wait_queue_horizontalLayout = QHBoxLayout()
@@ -196,28 +197,6 @@ class Setting_Ui(QWidget):
         # don't check certificate checkBox
         self.dont_check_certificate_checkBox = QCheckBox(self.download_options_tab)
         download_options_tab_verticalLayout.addWidget(self.dont_check_certificate_checkBox)
-
-        # remote time
-        self.remote_time_checkBox = QCheckBox(self.download_options_tab)
-        download_options_tab_verticalLayout.addWidget(self.remote_time_checkBox)
-
-        # change aria2 path
-        aria2_path_verticalLayout = QVBoxLayout()
-
-        self.aria2_path_checkBox = QCheckBox(self.download_options_tab)
-        aria2_path_verticalLayout.addWidget(self.aria2_path_checkBox)
-
-        aria2_path_horizontalLayout = QHBoxLayout()
-
-        self.aria2_path_lineEdit = QLineEdit(self.download_options_tab)
-        aria2_path_horizontalLayout.addWidget(self.aria2_path_lineEdit)
-
-        self.aria2_path_pushButton = QPushButton(self.download_options_tab)
-        aria2_path_horizontalLayout.addWidget(self.aria2_path_pushButton)
-
-        aria2_path_verticalLayout.addLayout(aria2_path_horizontalLayout)
-
-        download_options_tab_verticalLayout.addLayout(aria2_path_verticalLayout)
 
         download_options_tab_verticalLayout.addStretch(1)
 
@@ -399,6 +378,15 @@ class Setting_Ui(QWidget):
         self.keep_awake_checkBox = QCheckBox()
         style_tab_verticalLayout.addWidget(self.keep_awake_checkBox)
 
+        # check clipboard
+        self.check_clipboard_checkBox = QCheckBox()
+        style_tab_verticalLayout.addWidget(self.check_clipboard_checkBox)
+
+        # Don't show the add link window when the download request is
+        # sent by the browser extension.
+        self.dont_show_add_link_window_checkBox = QCheckBox()
+        style_tab_verticalLayout.addWidget(self.dont_show_add_link_window_checkBox)
+
         style_tab_verticalLayout.addStretch(1)
 
         # columns_tab
@@ -544,16 +532,16 @@ class Setting_Ui(QWidget):
         self.setWindowTitle(QCoreApplication.translate("setting_ui_tr", "Preferences"))
 
         self.tries_label.setToolTip(
-            QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>Set number of tries if download failed.</p></body></html>"))
+            QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>Set number of retries if download failed.</p></body></html>"))
         self.tries_label.setText(QCoreApplication.translate("setting_ui_tr", "Number of tries: "))
         self.tries_spinBox.setToolTip(
-            QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>Set number of tries if download failed.</p></body></html>"))
+            QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>Set number of retries if download failed.</p></body></html>"))
 
         self.wait_label.setToolTip(
-            QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>Set the seconds to wait between retries. Download manager will  retry  downloads  when  the  HTTP  server  returns  a  503 response.</p></body></html>"))
+            QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>Set the seconds to wait between retries.</p></body></html>"))
         self.wait_label.setText(QCoreApplication.translate("setting_ui_tr", "Wait period between retries (seconds): "))
         self.wait_spinBox.setToolTip(
-            QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>Set the seconds to wait between retries. Download manager will  retry  downloads  when  the  HTTP  server  returns  a  503 response.</p></body></html>"))
+            QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>Set the seconds to wait between retries.</p></body></html>"))
 
         self.time_out_label.setToolTip(
             QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>Set timeout in seconds. </p></body></html>"))
@@ -567,34 +555,19 @@ class Setting_Ui(QWidget):
         self.connections_spinBox.setToolTip(
             QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>Using multiple connections can help speed up your download.</p></body></html>"))
 
-        self.rpc_port_label.setText(QCoreApplication.translate("setting_ui_tr", "RPC port number: "))
-        self.rpc_port_spinbox.setToolTip(
-            QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p> Specify a port number for JSON-RPC/XML-RPC server to listen to. Possible Values: 1024 - 65535 Default: 6801 </p></body></html>"))
+        self.chunk_size_label.setText(QCoreApplication.translate("setting_ui_tr", "Chunk size(KiB): "))
+        self.chunk_size_label.setToolTip(
+            QCoreApplication.translate("setting_ui_tr", "It is python requests library chunk size. Do not change this If you are not familiar with it."))
 
         self.wait_queue_label.setText(QCoreApplication.translate(
             "setting_ui_tr", 'Wait period between each download in queue:'))
 
         self.dont_check_certificate_checkBox.setText(QCoreApplication.translate("setting_ui_tr", "Don't use certificate to verify the peers"))
         self.dont_check_certificate_checkBox.setToolTip(
-                QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>This option avoids SSL/TLS handshake failure. But use it at your own risk!</p></body></html>"))
-
-
-        self.remote_time_checkBox.setText(QCoreApplication.translate("setting_ui_tr", "Remote time"))
-        self.remote_time_checkBox.setToolTip(
-                QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>Retrieve timestamp of the remote file from the remote HTTP/FTP server and if it is available, apply it to the local file.</p></body></html>"))
-
-
-
-        self.aria2_path_checkBox.setText(QCoreApplication.translate("setting_ui_tr", 'Change Aria2 default path'))
-        self.aria2_path_pushButton.setText(QCoreApplication.translate("setting_ui_tr", 'Change'))
-        aria2_path_tooltip = QCoreApplication.translate(
-            "setting_ui_tr", "<html><head/><body><p>Attention: Wrong path may cause problems! Do it carefully or don't change default setting!</p></body></html>")
-        self.aria2_path_checkBox.setToolTip(aria2_path_tooltip)
-        self.aria2_path_lineEdit.setToolTip(aria2_path_tooltip)
-        self.aria2_path_pushButton.setToolTip(aria2_path_tooltip)
+            QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>This option avoids SSL/TLS handshake failure. But use it at your own risk!</p></body></html>"))
 
         self.setting_tabWidget.setTabText(self.setting_tabWidget.indexOf(
-            self.download_options_tab),  QCoreApplication.translate("setting_ui_tr", "Download Options"))
+            self.download_options_tab), QCoreApplication.translate("setting_ui_tr", "Download Options"))
 
         self.download_folder_label.setText(QCoreApplication.translate("setting_ui_tr", "Download folder: "))
         self.download_folder_pushButton.setText(QCoreApplication.translate("setting_ui_tr", "Change"))
@@ -603,7 +576,7 @@ class Setting_Ui(QWidget):
             "setting_ui_tr", "Create subfolders for Music,Videos, ... in default download folder"))
 
         self.setting_tabWidget.setTabText(
-            self.setting_tabWidget.indexOf(self.save_as_tab),  QCoreApplication.translate("setting_ui_tr", "Save As"))
+            self.setting_tabWidget.indexOf(self.save_as_tab), QCoreApplication.translate("setting_ui_tr", "Save As"))
 
         self.enable_notifications_checkBox.setText(
             QCoreApplication.translate("setting_ui_tr", "Enable Notification Sounds"))
@@ -611,7 +584,7 @@ class Setting_Ui(QWidget):
         self.volume_label.setText(QCoreApplication.translate("setting_ui_tr", "Volume: "))
 
         self.setting_tabWidget.setTabText(self.setting_tabWidget.indexOf(
-            self.notifications_tab),  QCoreApplication.translate("setting_ui_tr", "Notifications"))
+            self.notifications_tab), QCoreApplication.translate("setting_ui_tr", "Notifications"))
 
         self.style_label.setText(QCoreApplication.translate("setting_ui_tr", "Style: "))
         self.color_label.setText(QCoreApplication.translate("setting_ui_tr", "Color scheme: "))
@@ -650,11 +623,21 @@ class Setting_Ui(QWidget):
             QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>This option will prevent the system from going to sleep.\
             It is necessary if your power manager is suspending the system automatically. </p></body></html>"))
 
+        self.check_clipboard_checkBox.setText(QCoreApplication.translate("setting_ui_tr", "Check system clipboard for copied links"))
+        self.check_clipboard_checkBox.setToolTip(
+            QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>The program will automatically check the clipboard for copied links.\
+            </p></body></html>"))
+
+        self.dont_show_add_link_window_checkBox.setText(QCoreApplication.translate("setting_ui_tr", "Download requests from the browser will be executed immediately."))
+        self.dont_show_add_link_window_checkBox.setToolTip(
+            QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>When a download request is sent from the browser extension, the download will start without showing the Add Link window.\
+            </p></body></html>"))
+
         self.wait_queue_time.setToolTip(
             QCoreApplication.translate("setting_ui_tr", "<html><head/><body><p>Format HH:MM</p></body></html>"))
 
         self.setting_tabWidget.setTabText(
-            self.setting_tabWidget.indexOf(self.style_tab),  QCoreApplication.translate("setting_ui_tr", "Preferences"))
+            self.setting_tabWidget.indexOf(self.style_tab), QCoreApplication.translate("setting_ui_tr", "Preferences"))
 
 # columns_tab
         self.show_column_label.setText(QCoreApplication.translate("setting_ui_tr", 'Show these columns:'))
@@ -675,7 +658,7 @@ class Setting_Ui(QWidget):
 
 # Video Finder options tab
         self.setting_tabWidget.setTabText(self.setting_tabWidget.indexOf(
-            self.video_finder_tab), QCoreApplication.translate("setting_ui_tr",  "Video Finder Options"))
+            self.video_finder_tab), QCoreApplication.translate("setting_ui_tr", "Video Finder Options"))
 
         self.max_links_label.setText(QCoreApplication.translate("setting_ui_tr", 'Maximum number of links to capture:<br/>'
                                                                 '<small>(If browser sends multiple video links at a time)</small>'))

@@ -49,18 +49,25 @@ class MediaListFetcherThread(QThread):
     RESULT = Signal(dict)
     cookies = '# HTTP cookie file.\n'  # We shall write it in a file when thread starts.
 
-    def __init__(self, receiver_slot, video_dict, parent):
+    def __init__(self, receiver_slot, video_dict, main_window):
         super().__init__()
         self.RESULT.connect(receiver_slot)
         self.video_dict = video_dict
 
         self.cookie_path = os.path.join(persepolis_tmp, '.{}{}'.format(time(), random()))
 
+        # check certificate
+        if str(main_window.persepolis_setting.value('settings/dont-check-certificate')) == 'yes':
+            self.dont_check_certificate = True
+        else:
+            self.dont_check_certificate = False
+
         # youtube options must be added to youtube_dl_options_dict in dictionary format
         self.youtube_dl_options_dict = {'dump_single_json': True,
                                         'quiet': True,
                                         'noplaylist': True,
-                                        'no_warnings': True
+                                        'no_warnings': True,
+                                        'no-check-certificates': self.dont_check_certificate
                                         }
 
         # cookies
@@ -94,7 +101,7 @@ class MediaListFetcherThread(QThread):
             self.youtube_dl_options_dict['proxy'] = str(proxy_argument)
 
         if video_dict['download_user']:
-            
+
             self.youtube_dl_options_dict['username'] = str(video_dict['download_user'])
             self.youtube_dl_options_dict['password'] = str(video_dict['download_passwd'])
 
@@ -137,7 +144,7 @@ class MediaListFetcherThread(QThread):
         cookies = '# HTTP cookie file.\n'
         if raw_cookie:
             try:
-                raw_cookies = re.split(';\s*', str(raw_cookie))
+                raw_cookies = re.split(';\\s*', str(raw_cookie))
                 # Format all cookie values as netscape cookie.
                 for c in raw_cookies:
                     key, val = c.split('=', 1)
@@ -167,8 +174,8 @@ class VideoFinderAddLink(AddLinkWindow):
     running_thread = None
     threadPool = {}
 
-    def __init__(self, parent, receiver_slot, socks5_to_http_convertor_is_installed, settings, video_dict={}):
-        super().__init__(parent, receiver_slot, settings, socks5_to_http_convertor_is_installed, video_dict)
+    def __init__(self, parent, receiver_slot, settings, video_dict={}):
+        super().__init__(parent, receiver_slot, settings, video_dict)
         self.setWindowTitle(QCoreApplication.translate("ytaddlink_src_ui_tr", 'Video Finder'))
         self.size_label.hide()
 
@@ -366,7 +373,7 @@ class VideoFinderAddLink(AddLinkWindow):
         dictionary_to_send['link'] = self.link_lineEdit.text()
         dictionary_to_send['socket-timeout'] = '5'
 
-        fetcher_thread = MediaListFetcherThread(self.fetchedResult, dictionary_to_send, self)
+        fetcher_thread = MediaListFetcherThread(self.fetchedResult, dictionary_to_send, self.parent)
         self.parent.threadPool.append(fetcher_thread)
         self.parent.threadPool[-1].start()
 
@@ -397,8 +404,8 @@ class VideoFinderAddLink(AddLinkWindow):
 
                     if self.audio_format_selection_comboBox.currentText() != 'No audio':
                         self.change_name_lineEdit.setText(self.media_title)
-                        self.extension_label.setText('.' +
-                                                     self.no_video_list[int(self.audio_format_selection_comboBox.currentIndex()) - 1]['ext'])
+                        self.extension_label.setText('.'
+                                                     + self.no_video_list[int(self.audio_format_selection_comboBox.currentIndex()) - 1]['ext'])
 
                         self.change_name_checkBox.setChecked(True)
                     else:
@@ -407,15 +414,15 @@ class VideoFinderAddLink(AddLinkWindow):
             elif combobox == 'audio':
                 if self.audio_format_selection_comboBox.currentText() != 'No audio' and self.video_format_selection_comboBox.currentText() == 'No video':
                     self.change_name_lineEdit.setText(self.media_title)
-                    self.extension_label.setText('.' +
-                                                 self.no_video_list[index - 1]['ext'])
+                    self.extension_label.setText('.'
+                                                 + self.no_video_list[index - 1]['ext'])
 
                     self.change_name_checkBox.setChecked(True)
 
                 elif (self.audio_format_selection_comboBox.currentText() == 'No audio' and self.video_format_selection_comboBox.currentText() != 'No video') or (self.audio_format_selection_comboBox.currentText() != 'No audio' and self.video_format_selection_comboBox.currentText() != 'No video'):
                     self.change_name_lineEdit.setText(self.media_title)
-                    self.extension_label.setText('.' +
-                                                 self.no_audio_list[int(self.video_format_selection_comboBox.currentIndex()) - 1]['ext'])
+                    self.extension_label.setText('.'
+                                                 + self.no_audio_list[int(self.video_format_selection_comboBox.currentIndex()) - 1]['ext'])
 
                     self.change_name_checkBox.setChecked(True)
 
@@ -571,7 +578,8 @@ class VideoFinderAddLink(AddLinkWindow):
             item_id = self.threadPool[str(result['thread_key'])]['item_id']
             if result['file_size'] and result['file_size'] != '0':
                 text = self.media_comboBox.itemText(item_id)
-                self.media_comboBox.setItemText(item_id, '{} - {}'.format(text, result['file_size']))
+                if text != 'Best quality':
+                    self.media_comboBox.setItemText(item_id, '{} - {}'.format(text, result['file_size']))
         except Exception as ex:
             logger.sendToLog(ex, "ERROR")
 
@@ -594,11 +602,11 @@ class VideoFinderAddLink(AddLinkWindow):
             options['proxy_passwd'] = self.proxy_pass_lineEdit.text()
 
             # http, https or socks5 proxy
-            if self.http_radioButton.isChecked() == True:
+            if self.http_radioButton.isChecked() is True:
 
                 options['proxy_type'] = 'http'
 
-            elif self.https_radioButton.isChecked() == True:
+            elif self.https_radioButton.isChecked() is True:
 
                 options['proxy_type'] = 'https'
 
@@ -606,9 +614,8 @@ class VideoFinderAddLink(AddLinkWindow):
 
                 options['proxy_type'] = 'socks5'
 
-
         if self.download_checkBox.isChecked():
-            
+
             options['download_user'] = self.download_user_lineEdit.text()
             options['download_passwd'] = self.download_pass_lineEdit.text()
 
@@ -665,7 +672,6 @@ class VideoFinderAddLink(AddLinkWindow):
                 audio_and_video_link = self.video_audio_list[self.media_comboBox.currentIndex()]['url']
                 link_list.append(audio_and_video_link)
 
-
         # write user's new inputs in persepolis_setting for next time :)
         self.persepolis_setting.setValue(
             'add_link_initialization/ip', self.ip_lineEdit.text())
@@ -677,13 +683,13 @@ class VideoFinderAddLink(AddLinkWindow):
             'add_link_initialization/download_user', self.download_user_lineEdit.text())
 
         # http, https or socks5 proxy
-        if self.http_radioButton.isChecked() == True:
+        if self.http_radioButton.isChecked() is True:
 
             proxy_type = 'http'
             self.persepolis_setting.setValue(
                 'add_link_initialization/proxy_type', 'http')
 
-        elif self.https_radioButton.isChecked() == True:
+        elif self.https_radioButton.isChecked() is True:
 
             proxy_type = 'https'
             self.persepolis_setting.setValue(
@@ -695,9 +701,8 @@ class VideoFinderAddLink(AddLinkWindow):
             self.persepolis_setting.setValue(
                 'add_link_initialization/proxy_type', 'socks5')
 
-
         # get proxy information
-        if not(self.proxy_checkBox.isChecked()):
+        if not (self.proxy_checkBox.isChecked()):
             ip = None
             port = None
             proxy_user = None
@@ -705,47 +710,38 @@ class VideoFinderAddLink(AddLinkWindow):
             proxy_type = None
         else:
             ip = self.ip_lineEdit.text()
-            if not(ip):
+            if not (ip):
                 ip = None
             port = self.port_spinBox.value()
-            if not(port):
+            if not (port):
                 port = None
             proxy_user = self.proxy_user_lineEdit.text()
-            if not(proxy_user):
+            if not (proxy_user):
                 proxy_user = None
             proxy_passwd = self.proxy_pass_lineEdit.text()
-            if not(proxy_passwd):
+            if not (proxy_passwd):
                 proxy_passwd = None
 
         # get download username and password information
-        if not(self.download_checkBox.isChecked()):
+        if not (self.download_checkBox.isChecked()):
             download_user = None
             download_passwd = None
         else:
             download_user = self.download_user_lineEdit.text()
-            if not(download_user):
+            if not (download_user):
                 download_user = None
             download_passwd = self.download_pass_lineEdit.text()
-            if not(download_passwd):
+            if not (download_passwd):
                 download_passwd = None
 
-        # check that if user limits download speed.
-        if not(self.limit_checkBox.isChecked()):
-            limit = 0
-        else:
-            if self.limit_comboBox.currentText() == "KiB/s":
-                limit = str(self.limit_spinBox.value()) + str("K")
-            else:
-                limit = str(self.limit_spinBox.value()) + str("M")
-
         # get start time for download if user set that.
-        if not(self.start_checkBox.isChecked()):
+        if not (self.start_checkBox.isChecked()):
             start_time = None
         else:
             start_time = self.start_time_qDataTimeEdit.text()
 
         # get end time for download if user set that.
-        if not(self.end_checkBox.isChecked()):
+        if not (self.end_checkBox.isChecked()):
             end_time = None
         else:
             end_time = self.end_time_qDateTimeEdit.text()
@@ -814,7 +810,7 @@ class VideoFinderAddLink(AddLinkWindow):
                                    'out': name_list[0], 'start_time': start_time, 'end_time': end_time, 'link': link_list[0], 'ip': ip,
                                    'port': port, 'proxy_user': proxy_user, 'proxy_passwd': proxy_passwd, 'proxy_type': proxy_type,
                                    'download_user': download_user, 'download_passwd': download_passwd,
-                                   'connections': connections, 'limit_value': limit, 'download_path': download_path}
+                                   'connections': connections, 'limit_value': 10, 'download_path': download_path}
 
             add_link_dictionary_list.append(add_link_dictionary)
 
@@ -823,13 +819,13 @@ class VideoFinderAddLink(AddLinkWindow):
                                          'out': name_list[0], 'start_time': start_time, 'end_time': end_time, 'link': link_list[0], 'ip': ip,
                                          'port': port, 'proxy_user': proxy_user, 'proxy_passwd': proxy_passwd, 'proxy_type': proxy_type,
                                          'download_user': download_user, 'download_passwd': download_passwd,
-                                         'connections': connections, 'limit_value': limit, 'download_path': download_path}
+                                         'connections': connections, 'limit_value': 10, 'download_path': download_path}
 
             audio_add_link_dictionary = {'referer': referer, 'header': header, 'user_agent': user_agent, 'load_cookies': load_cookies,
                                          'out': name_list[1], 'start_time': None, 'end_time': end_time, 'link': link_list[1], 'ip': ip,
                                          'port': port, 'proxy_user': proxy_user, 'proxy_passwd': proxy_passwd, 'proxy_type': proxy_type,
                                          'download_user': download_user, 'download_passwd': download_passwd,
-                                         'connections': connections, 'limit_value': limit, 'download_path': download_path}
+                                         'connections': connections, 'limit_value': 10, 'download_path': download_path}
 
             add_link_dictionary_list = [video_add_link_dictionary, audio_add_link_dictionary]
 

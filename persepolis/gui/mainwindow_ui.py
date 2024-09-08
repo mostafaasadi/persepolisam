@@ -13,18 +13,20 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 try:
-    from PySide6.QtWidgets import QHeaderView, QDoubleSpinBox, QPushButton, QComboBox,  QMenu, QTreeView, QSplitter, QHBoxLayout, QVBoxLayout, QTableWidgetItem, QAbstractItemView, QToolBar, QMenuBar, QStatusBar, QTableWidget, QMainWindow, QWidget, QFrame, QCheckBox, QLabel
+    from PySide6.QtWidgets import QDial, QHeaderView, QPushButton, QComboBox, QMenu, QTreeView, QSplitter, QHBoxLayout, QVBoxLayout, QTableWidgetItem, QAbstractItemView, QToolBar, QMenuBar, QStatusBar, QTableWidget, QMainWindow, QWidget, QFrame, QCheckBox, QLabel
     from PySide6.QtGui import QShortcut, QAction, QCursor, QIcon, QStandardItemModel
     from PySide6.QtCore import QCoreApplication, QRect, Qt, QTranslator, QLocale
 except:
-    from PyQt5.QtWidgets import QHeaderView, QShortcut, QDoubleSpinBox, QPushButton, QComboBox,  QTreeView, QSplitter, QHBoxLayout, QVBoxLayout, QMenu, QTableWidgetItem, QAbstractItemView, QToolBar, QMenuBar, QStatusBar, QTableWidget, QAction, QMainWindow, QWidget, QFrame, QCheckBox, QLabel
-    from PyQt5.QtGui import QCursor, QIcon, QStandardItemModel 
+    from PyQt5.QtWidgets import QDial, QHeaderView, QShortcut, QPushButton, QComboBox, QTreeView, QSplitter, QHBoxLayout, QVBoxLayout, QMenu, QTableWidgetItem, QAbstractItemView, QToolBar, QMenuBar, QStatusBar, QTableWidget, QAction, QMainWindow, QWidget, QFrame, QCheckBox, QLabel
+    from PyQt5.QtGui import QCursor, QIcon, QStandardItemModel
     from PyQt5.QtCore import QCoreApplication, QRect, Qt, QTranslator, QLocale
 
 from persepolis.gui import resources
 from persepolis.gui.customized_widgets import MyQDateTimeEdit
 
 # align center for items in download table
+
+
 class QTableWidgetItem(QTableWidgetItem):
     def __init__(self, input):
         super().__init__(input)
@@ -98,6 +100,8 @@ class MenuWidget(QPushButton):
 
         fileMenu.addAction(self.parent.addtextfileAction)
 
+        fileMenu.addAction(self.parent.addFromClipboardAction)
+
         downloadMenu.addAction(self.parent.resumeAction)
 
         downloadMenu.addAction(self.parent.pauseAction)
@@ -163,8 +167,8 @@ class DownloadTableWidget(QTableWidget):
         # creating context menu
         self.tablewidget_menu = QMenu(self)
         self.sendMenu = self.tablewidget_menu.addMenu('')
-        
-        # don't wrap items 
+
+        # don't wrap items
         self.setWordWrap(False)
 
     def contextMenuEvent(self, event):
@@ -322,8 +326,6 @@ class MainWindow_Ui(QMainWindow):
 
         # limit_checkBox
         limit_verticalLayout = QVBoxLayout(self.limit_after_frame)
-        self.limit_checkBox = QCheckBox(self)
-        limit_verticalLayout.addWidget(self.limit_checkBox)
 
         # limit_frame
         self.limit_frame = QFrame(self)
@@ -333,23 +335,15 @@ class MainWindow_Ui(QMainWindow):
 
         limit_frame_verticalLayout = QVBoxLayout(self.limit_frame)
 
-        # limit_spinBox
-        limit_frame_horizontalLayout = QHBoxLayout()
-        self.limit_spinBox = QDoubleSpinBox(self)
-        self.limit_spinBox.setMinimum(1)
-        self.limit_spinBox.setMaximum(1023)
-        limit_frame_horizontalLayout.addWidget(self.limit_spinBox)
+        # limit_dial and limit_label
+        self.limit_dial = QDial(self.limit_frame)
+        self.limit_dial.setNotchesVisible(True)
+        self.limit_dial.setMaximum(10)
+        self.limit_dial.setMinimum(0)
+        limit_frame_verticalLayout.addWidget(self.limit_dial)
 
-        # limit_comboBox
-        self.limit_comboBox = QComboBox(self)
-        self.limit_comboBox.addItem("")
-        self.limit_comboBox.addItem("")
-        limit_frame_horizontalLayout.addWidget(self.limit_comboBox)
-        limit_frame_verticalLayout.addLayout(limit_frame_horizontalLayout)
-
-        # limit_pushButton
-        self.limit_pushButton = QPushButton(self)
-        limit_frame_verticalLayout.addWidget(self.limit_pushButton)
+        self.limit_label = QLabel(self.limit_frame)
+        limit_frame_verticalLayout.addWidget(self.limit_label)
 
         # after_checkBox
         self.after_checkBox = QCheckBox(self)
@@ -487,7 +481,7 @@ class MainWindow_Ui(QMainWindow):
         self.toolBar.setFloatable(False)
         self.toolBar.setMovable(False)
 
-        #toolBar and menubar and actions
+        # toolBar and menubar and actions
         self.persepolis_setting.beginGroup('settings/shortcuts')
 
         # videoFinderAddLinkAction
@@ -571,6 +565,12 @@ class MainWindow_Ui(QMainWindow):
             self.persepolis_setting.value('import_text_shortcut'), self, self.importText)
 
         fileMenu.addAction(self.addtextfileAction)
+
+        # importText From Clipboard
+        self.addFromClipboardAction = QAction(QIcon(icons + 'clipboard'), QCoreApplication.translate("mainwindow_ui_tr", 'Import Links from Clipboard...'), self,
+                                              statusTip=QCoreApplication.translate("mainwindow_ui_tr", 'Import Links From Clipboard'), triggered=self.importLinksFromClipboard)
+
+        fileMenu.addAction(self.addFromClipboardAction)
 
         # resumeAction
         self.resumeAction = QAction(QIcon(icons + 'play'), QCoreApplication.translate("mainwindow_ui_tr", 'Resume Download'), self,
@@ -729,8 +729,7 @@ class MainWindow_Ui(QMainWindow):
 
         self.toolBar2.addWidget(self.qmenu)
 
-
-# labels
+        # labels
         self.queue_panel_show_button.setText(QCoreApplication.translate("mainwindow_ui_tr", "Hide Options"))
         self.start_checkBox.setText(QCoreApplication.translate("mainwindow_ui_tr", "Start Time"))
 
@@ -738,11 +737,6 @@ class MainWindow_Ui(QMainWindow):
 
         self.reverse_checkBox.setText(QCoreApplication.translate(
             "mainwindow_ui_tr", "Download bottom of\n the list first"))
-
-        self.limit_checkBox.setText(QCoreApplication.translate("mainwindow_ui_tr", "Limit Speed"))
-        self.limit_comboBox.setItemText(0, "KiB/s")
-        self.limit_comboBox.setItemText(1, "MiB/s")
-        self.limit_pushButton.setText(QCoreApplication.translate("mainwindow_ui_tr", "Apply"))
 
         self.after_checkBox.setText(QCoreApplication.translate("mainwindow_ui_tr", "After download"))
         self.after_comboBox.setItemText(0, QCoreApplication.translate("mainwindow_ui_tr", "Shut Down"))

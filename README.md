@@ -3,23 +3,30 @@
 </p>
 <h1 align="center">Persepolis Download Manager</h1>
 
-[![Latest stable release](https://img.shields.io/github/release/persepolisdm/persepolis.svg?maxAge=3600)](https://github.com/persepolisdm/persepolis/releases) [![Total downloads](https://img.shields.io/github/downloads/persepolisdm/persepolis/total.svg)](https://github.com/persepolisdm/persepolis) [![GitHub license](https://img.shields.io/github/license/persepolisdm/persepolis.svg)](https://github.com/persepolisdm/persepolis/blob/master/LICENSE) [![Build Status](https://travis-ci.org/persepolisdm/persepolis.svg?branch=master)](https://travis-ci.org/persepolisdm/persepolis) [![GitHub last commit](https://img.shields.io/github/last-commit/persepolisdm/persepolis.svg)](https://github.com/persepolisdm/persepolis/commits/master) [![GitHub contributors](https://img.shields.io/github/contributors/persepolisdm/persepolis.svg)](https://github.com/persepolisdm/persepolis/graphs/contributors) [![GitHub commit activity the past week, 4 weeks, year](https://img.shields.io/github/commit-activity/y/persepolisdm/persepolis.svg)](https://github.com/persepolisdm/persepolis/commits/master) [![AUR](https://img.shields.io/aur/version/persepolis.svg)](https://aur.archlinux.org/packages/persepolis-git) [![Twitter Follow](https://img.shields.io/twitter/follow/persepolisdm.svg?style=social&label=Follow)](https://twitter.com/persepolisdm)
+[![Latest stable release](https://img.shields.io/github/release/persepolisdm/persepolis.svg?maxAge=3600)](https://github.com/persepolisdm/persepolis/releases) [![Total downloads](https://img.shields.io/github/downloads/persepolisdm/persepolis/total.svg)](https://github.com/persepolisdm/persepolis) [![GitHub license](https://img.shields.io/github/license/persepolisdm/persepolis.svg)](https://github.com/persepolisdm/persepolis/blob/master/LICENSE) [![Build Status](https://travis-ci.org/persepolisdm/persepolis.svg?branch=master)](https://travis-ci.org/persepolisdm/persepolis) [![GitHub last commit](https://img.shields.io/github/last-commit/persepolisdm/persepolis.svg)](https://github.com/persepolisdm/persepolis/commits/master) [![GitHub contributors](https://img.shields.io/github/contributors/persepolisdm/persepolis.svg)](https://github.com/persepolisdm/persepolis/graphs/contributors) [![GitHub commit activity the past week, 4 weeks, year](https://img.shields.io/github/commit-activity/y/persepolisdm/persepolis.svg)](https://github.com/persepolisdm/persepolis/commits/master) [![AUR](https://img.shields.io/aur/version/persepolis-git.svg)](https://aur.archlinux.org/packages/persepolis-git) [![Twitter Follow](https://img.shields.io/twitter/follow/persepolisdm.svg?style=social&label=Follow)](https://twitter.com/persepolisdm)
 
 > **Content**  
 > - [About](https://github.com/persepolisdm/persepolis#about)  
+> - [How to install PersepolisDM](https://github.com/persepolisdm/persepolis/wiki)
 > - [FAQ](https://github.com/persepolisdm/persepolis#faq)  
 > - [Screenshots](https://github.com/persepolisdm/persepolis#screenshots)  
 > - [Credits](https://github.com/persepolisdm/persepolis#credits)  
 
 ### **About**
-Persepolis is a download manager & a GUI for [Aria2](https://github.com/aria2/aria2). It's written in Python. Persepolis is a sample of free and open source software. It's developed for GNU/Linux distributions, BSDs, MacOS, and Microsoft Windows.  
+Persepolis is a download manager written in Python. Persepolis is a sample of free and open source software. It's developed for GNU/Linux distributions, BSDs, MacOS, and Microsoft Windows.  
 
 ### **Features**
-- Multi-segment downloading
+- Multi-segment downloading(64 connections)
 - Scheduling downloads
 - Download queuing
 - Download video from youtube and ...
 - and many more!
+
+Demonstration clip:
+[![Demonstration video](https://img.youtube.com/vi/QHdMShFgzhQ/0.jpg)](https://www.youtube.com/watch?v=QHdMShFgzhQ)
+
+### How to install PersepolisDM?
+> Please checkout Persepolis [wiki](https://github.com/persepolisdm/persepolis/wiki)
 
 ### **FAQ**
 > **Where does the name come from?**
@@ -53,7 +60,7 @@ It exemplifies the Achaemenid style of architecture. UNESCO declared the ruins o
 [GitHub](https://github.com/mostafaasadi) | [E-mail](mailto:mostafaasadi73@gmail.com)
 
 **Sadegh Alirezaie:** Persepolis website support  
-[GitHub](https://github.com/Alirezaies) | [E-mail](mailto:alirezaie@sadegh.io)
+[GitHub](https://github.com/Alirezaies) | [E-mail](mailto:alirezaie@sadegh.org)
 
 **Jafar Akhondali:** Browsers add-ons support  
 [GitHub](https://github.com/JafarAkhondali) | [E-mail](mailto:jafar.akhondali@yahoo.com)
@@ -74,13 +81,13 @@ It exemplifies the Achaemenid style of architecture. UNESCO declared the ruins o
 [Persepolis website (En)](https://persepolisdm.github.io/) | [Persepolis website (Fa)](https://persepolisdm.github.io/fa) | [Twitter](https://twitter.com/persepolisdm) | [Telegram Channel](https://telegram.me/persepolisdm)
 
 ### Acknowledgments:
-[Aria2c project](https://github.com/aria2/aria2)
-
 [YT-DLP project](https://github.com/yt-dlp/yt-dlp) 
 
 [FFmpeg project](https://github.com/FFmpeg/FFmpeg)
 
-[Gost project](https://github.com/ginuerzh/gost)
+[PySide project](https://wiki.qt.io/Qt_for_Python)
+
+[Python Requests project](https://github.com/psf/requests)
 
 ---
 _Is there any mistake in README.md? Report it in [issue tracker](https://github.com/persepolisdm/persepolis/issues) or correct it by yourself._

@@ -14,24 +14,25 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 try:
+    from PySide6 import QtWidgets, QtCore
+    from PySide6.QtCore import __version__ as QT_VERSION_STR
     from PySide6.QtGui import QFont
-    from PySide6.QtWidgets import QApplication, QStyleFactory
     from PySide6.QtCore import QFile, QTextStream, QSettings, Qt
 except:
+    from PyQt5 import QtWidgets, QtCore
     from PyQt5.QtGui import QFont
-    from PyQt5.QtWidgets import QApplication, QStyleFactory
-    from PyQt5.QtCore import QFile, QTextStream, QSettings, Qt
+    from PyQt5.QtCore import QFile, QTextStream, QSettings, Qt, QT_VERSION_STR
 
 from persepolis.gui import resources
 import traceback
 from persepolis.scripts.error_window import ErrorWindow
-from persepolis.gui.palettes import DarkFusionPalette, LightFusionPalette
 import json
 import struct
 import argparse
 from persepolis.scripts import osCommands
 from persepolis.scripts.useful_tools import osAndDesktopEnvironment, determineConfigFolder
 from persepolis.constants import OS
+from persepolis.constants import VERSION
 from copy import deepcopy
 import sys
 import os
@@ -113,7 +114,7 @@ if lock_file_validation:
 persepolis_setting = QSettings('persepolis_download_manager', 'persepolis')
 
 
-class PersepolisApplication(QApplication):
+class PersepolisApplication(QtWidgets.QApplication):
     def __init__(self, argv):
         super().__init__(argv)
 
@@ -134,16 +135,12 @@ class PersepolisApplication(QApplication):
     def setPersepolisColorScheme(self, color_scheme):
         self.persepolis_color_scheme = color_scheme
         if color_scheme == 'Dark Fusion':
-            dark_fusion = DarkFusionPalette()
-            self.setPalette(dark_fusion)
             file = QFile(":/dark_style.qss")
             file.open(QFile.ReadOnly | QFile.Text)
             stream = QTextStream(file)
             self.setStyleSheet(stream.readAll())
 
         elif color_scheme == 'Light Fusion':
-            light_fusion = LightFusionPalette()
-            self.setPalette(light_fusion)
             file = QFile(":/light_style.qss")
             file.open(QFile.ReadOnly | QFile.Text)
             stream = QTextStream(file)
@@ -152,7 +149,7 @@ class PersepolisApplication(QApplication):
 
 # create  terminal arguments
 parser = argparse.ArgumentParser(description='Persepolis Download Manager')
-#parser.add_argument('chromium', nargs = '?', default = 'no', help='this switch is used for chrome native messaging in Linux and Mac')
+# parser.add_argument('chromium', nargs = '?', default = 'no', help='this switch is used for chrome native messaging in Linux and Mac')
 parser.add_argument('--link', action='store', nargs=1, help='Download link.(Use "" for links)')
 parser.add_argument('--referer', action='store', nargs=1,
                     help='Set an http referrer (Referer). This affects all http/https downloads.  If * is given, the download URI is also used as the referrer.')
@@ -167,7 +164,7 @@ parser.add_argument('--tray', action='store_true',
                     help="Persepolis is starting in tray icon. It's useful when you want to put persepolis in system's startup.")
 parser.add_argument('--parent-window', action='store', nargs=1,
                     help='this switch is used for chrome native messaging in Windows')
-parser.add_argument('--version', action='version', version='Persepolis Download Manager 4.0.1')
+parser.add_argument('--version', action='version', version='Persepolis Download Manager ' + VERSION.version_str)
 
 
 # Clears unwanted args ( like args from Browers via NHM )
@@ -274,7 +271,7 @@ if args.clear:
 if args.default:
     persepolis_setting.clear()
     persepolis_setting.sync()
-    print ('Persepolis restored default')
+    print('Persepolis restored default')
     sys.exit(0)
 
 
@@ -366,16 +363,44 @@ else:
 
 def main():
     # if lock_file is existed , it means persepolis is still running!
-    if lock_file_validation and (not((args.parent_window or unknownargs) and browser_url == False) or ((args.parent_window or unknownargs) and start_persepolis_if_browser_executed)):
+    if lock_file_validation and (not ((args.parent_window or unknownargs) and browser_url is False) or ((args.parent_window or unknownargs) and start_persepolis_if_browser_executed)):
+
+        QAPP = QtWidgets.QApplication.instance()
+        if QAPP is None:
+            # We do not have an already instantiated QApplication
+            # let's add some sane defaults
+
+            # hidpi handling
+            qtVersionCompare = tuple(map(int, QT_VERSION_STR.split(".")))
+            if qtVersionCompare > (6, 0):
+                # Qt6 seems to support hidpi without needing to do anything so continue
+                pass
+            elif qtVersionCompare > (5, 14):
+
+                try:
+                    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+                    QtWidgets.QApplication.setHighDpiScaleFactorRoundingPolicy(
+                        QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+                    )
+                except Exception as error_message:
+                    from persepolis.scripts import logger
+                    logger.sendToLog(str(error_message), "ERROR")
+
+            else:  # qt 5.12 and 5.13
+                try:
+                    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+                    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
+                except Exception as error_message:
+                    from persepolis.scripts import logger
+                    logger.sendToLog(str(error_message), "ERROR")
 
         # set QT_AUTO_SCREEN_SCALE_FACTOR to 1 for "high DPI displays"
-        os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
+#         os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
 
         # run mainwindow
 
         # set color_scheme and style
         # see palettes.py and setting.py
-
 
         # create QApplication
         persepolis_download_manager = PersepolisApplication(sys.argv)
@@ -384,32 +409,27 @@ def main():
         # when it's minimized in system tray.
         persepolis_download_manager.setQuitOnLastWindowClosed(False)
 
-        # Enable High DPI display
-        try:
-            if hasattr(QStyleFactory, 'AA_UseHighDpiPixmaps'):
-                persepolis_download_manager.setAttribute(Qt.AA_UseHighDpiPixmaps)
-        except:
-            from persepolis.scripts import logger
-
-            # write error_message in log file.
-            logger.sendToLog('Qt.AA_UseHighDpiPixmaps is not available!', "ERROR")
-
+#         # Enable High DPI display
+#         try:
+#             if hasattr(QStyleFactory, 'AA_UseHighDpiPixmaps'):
+#                 persepolis_download_manager.setAttribute(Qt.AA_UseHighDpiPixmaps)
+#         except:
+#             from persepolis.scripts import logger
+#             # write error_message in log file.
+#             logger.sendToLog('Qt.AA_UseHighDpiPixmaps is not available!', "ERROR")
         # this line is added fot fixing persepolis view in HighDpi displays
         # more information at: https://doc.qt.io/qt-5/highdpi.html
-        try:
-            persepolis_download_manager.setAttribute(Qt.AA_EnableHighDpiScaling)
-        except:
-            from persepolis.scripts import logger
-
-            # write error_message in log file.
-            logger.sendToLog('Qt.AA_EnableHighDpiScaling is not available!', "ERROR")
-
-
+#         try:
+#             persepolis_download_manager.setAttribute(Qt.AA_EnableHighDpiScaling)
+#         except:
+#             from persepolis.scripts import logger
+#             # write error_message in log file.
+#             logger.sendToLog('Qt.AA_EnableHighDpiScaling is not available!', "ERROR")
         # set organization name and domain and application name
         persepolis_download_manager.setOrganizationName('com.github.persepolisdm.persepolis')
         persepolis_download_manager.setApplicationName('PersepolisDM')
         persepolis_download_manager.setDesktopFileName('com.github.persepolisdm.persepolis')
-        persepolis_download_manager.setApplicationVersion('4.0.1')
+        persepolis_download_manager.setApplicationVersion(VERSION.version_str)
 
         # Persepolis setting
         persepolis_download_manager.setting = QSettings('persepolis_download_manager', 'persepolis')
@@ -459,7 +479,7 @@ def main():
 
         sys.exit(persepolis_download_manager.exec_())
 
-    elif not((args.parent_window or unknownargs)):
+    elif not ((args.parent_window or unknownargs)):
 
         # this section warns user that program is still running and no need to run it again
         # and creating a file to notify mainwindow for showing itself!
