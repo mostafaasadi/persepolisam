@@ -21,15 +21,17 @@ except:
     from PyQt5.QtCore import QThread, QCoreApplication, QTranslator, QLocale
     from PyQt5.QtCore import pyqtSignal as Signal
 
-from persepolis.scripts.useful_tools import determineConfigFolder
+from persepolis.scripts.useful_tools import determineConfigFolder, dictToHeader
 from persepolis.scripts.addlink import AddLinkWindow
 from persepolis.scripts import logger, osCommands
 from persepolis.scripts.spider import spider
-from time import time
+from persepolis.constants import VERSION
 from functools import partial
+from time import time
 from random import random
 from copy import deepcopy
 import yt_dlp as youtube_dl
+import urllib
 import re
 import os
 
@@ -48,6 +50,7 @@ persepolis_tmp = os.path.join(config_folder, 'persepolis_tmp')
 class MediaListFetcherThread(QThread):
     RESULT = Signal(dict)
     cookies = '# HTTP cookie file.\n'  # We shall write it in a file when thread starts.
+    LOADCOOKIEFILESIGNAL = Signal(str)
 
     def __init__(self, receiver_slot, video_dict, main_window):
         super().__init__()
@@ -80,6 +83,10 @@ class MediaListFetcherThread(QThread):
         # user_agent
         if 'user_agent' in video_dict.keys() and video_dict['user_agent']:
             self.youtube_dl_options_dict['user-agent'] = str(video_dict['user_agent'])
+        else:
+            # set PersepolisDM user agent
+            video_dict['user_agent'] = 'PersepolisDM/' + str(VERSION.version_str)
+            self.youtube_dl_options_dict['user-agent'] = 'PersepolisDM/' + str(VERSION.version_str)
 
         # load_cookies
         if 'load_cookies' in video_dict.keys() and video_dict['load_cookies']:
@@ -122,22 +129,28 @@ class MediaListFetcherThread(QThread):
                     self.youtube_link,
                     download=False
                 )
-
+            # write new cookies to cookie file
+            ydl.cookiejar.save(filename=self.cookie_path)
             error = "error"  # Or comment out this line to show full stderr.
             if result:
                 ret_val = result
             else:
                 ret_val = {'error': str(error)}
+                try:
+                    osCommands.remove(self.cookie_path)
+
+                except Exception as ex:
+                    logger.sendToLog(ex, "ERROR")
 
         except Exception as ex:
             ret_val = {'error': str(ex)}
-        finally:  # Delete cookie file
             try:
                 osCommands.remove(self.cookie_path)
 
             except Exception as ex:
                 logger.sendToLog(ex, "ERROR")
 
+        self.LOADCOOKIEFILESIGNAL.emit(self.cookie_path)
         self.RESULT.emit(ret_val)
 
     def makeHttpCookie(self, raw_cookie, host_name='.youtube.com'):
@@ -159,15 +172,19 @@ class MediaListFetcherThread(QThread):
 class FileSizeFetcherThread(QThread):
     FOUND = Signal(dict)
 
-    def __init__(self, dictionary, thread_key):
+    def __init__(self, dictionary, text, combobox_type, index):
         super().__init__()
         self.dictionary = dictionary
-        self.key = thread_key
+        self.text = text
+        self.combobox_type = combobox_type
+        self.index = index
 
     def run(self):
         spider_file_size = spider(self.dictionary)[1]
-        self.FOUND.emit({'thread_key': self.key,
-                         'file_size': spider_file_size})
+        self.FOUND.emit({'text': self.text,
+                         'file_size': spider_file_size,
+                         'combobox_type': self.combobox_type,
+                         'index': self.index})
 
 
 class VideoFinderAddLink(AddLinkWindow):
@@ -183,6 +200,7 @@ class VideoFinderAddLink(AddLinkWindow):
         self.no_audio_list = []
         self.no_video_list = []
         self.video_audio_list = []
+        self.cookie_path = None
 
         self.media_title = ''
 
@@ -376,6 +394,12 @@ class VideoFinderAddLink(AddLinkWindow):
         fetcher_thread = MediaListFetcherThread(self.fetchedResult, dictionary_to_send, self.parent)
         self.parent.threadPool.append(fetcher_thread)
         self.parent.threadPool[-1].start()
+        self.parent.threadPool[-1].LOADCOOKIEFILESIGNAL.connect(self.setLoadCookie)
+
+    def setLoadCookie(self, str):
+        if os.path.isfile(str):
+            self.cookie_path = str
+            self.load_cookies_lineEdit.setText(str)
 
     def fileNameChanged(self, value):
         if value.strip() == '':
@@ -432,7 +456,13 @@ class VideoFinderAddLink(AddLinkWindow):
         except Exception as ex:
             logger.sendToLog(ex, "ERROR")
 
-    def fetchedResult(self, media_dict):
+    # Return the filename extension from url, or ''.
+    def getFileExtension(self, url):
+        parsed = urllib.parse.urlparse(url)
+        root, ext = os.path.splitext(parsed.path)
+        return ext[1:]
+
+    def fetchedResult(self, media_dict): # noqa
 
         self.url_submit_pushButtontton.setEnabled(True)
         if 'error' in media_dict.keys():
@@ -445,7 +475,13 @@ class VideoFinderAddLink(AddLinkWindow):
             self.video_format_selection_comboBox.addItem('No video')
             self.audio_format_selection_comboBox.addItem('No audio')
 
-            self.media_title = media_dict['title']
+            # set first 20 characters of media_title for file name
+            if 'title' in media_dict.keys():
+                if len(media_dict['title']) > 20:
+                    self.media_title = media_dict['title'][0:20]
+            else:
+                self.media_title = 'Video finder'
+
             if 'formats' not in media_dict.keys() and 'entries' in media_dict.keys():
                 formats = media_dict['entries']
                 formats = formats[0]
@@ -459,6 +495,24 @@ class VideoFinderAddLink(AddLinkWindow):
                     no_audio = False
                     no_video = False
                     text = ''
+
+                    # set http_headers
+                    if 'http_headers' in f.keys():
+                        header_dict = f['http_headers']
+
+                        if 'User-Agent' in header_dict.keys():
+                            self.user_agent_lineEdit.setText(header_dict['User-Agent'])
+                            self.plugin_add_link_dictionary['user-agent'] = header_dict['User-Agent']
+                            header_dict.pop('User-Agent')
+
+                        if 'Referer' in header_dict.keys():
+                            self.referer_lineEdit.setText(header_dict['Referer'])
+                            self.plugin_add_link_dictionary['referer'] = header_dict['Referer']
+                            header_dict.pop('Referer')
+
+                        self.plugin_add_link_dictionary['header'] = dictToHeader(header_dict)
+                        self.header_lineEdit.setText(self.plugin_add_link_dictionary['header'])
+
                     if 'acodec' in f.keys():
                         # only video, no audio
                         if f['acodec'] == 'none':
@@ -483,8 +537,9 @@ class VideoFinderAddLink(AddLinkWindow):
                     if 'filesize' in f.keys() and f['filesize']:
                         # Youtube api does not supply file size for some formats, so check it.
                         text = text + ' ' + '{}'.format(self.getReadableSize(f['filesize']))
-
+                        size_available = True
                     else:  # Start spider to find file size
+                        size_available = False
                         input_dict = deepcopy(self.plugin_add_link_dictionary)
 
                         input_dict['link'] = f['url']
@@ -493,24 +548,33 @@ class VideoFinderAddLink(AddLinkWindow):
                         for key in more_options.keys():
                             input_dict[key] = more_options[key]
 
-                        size_fetcher = FileSizeFetcherThread(input_dict, i)
+                    # Add current format to the related comboboxes
+                    if no_audio:
+                        combobox_type = 'video'
+                        self.no_audio_list.append(f)
+                        self.video_format_selection_comboBox.addItem(text)
+                        index = self.video_format_selection_comboBox.count() - 1
+
+                    elif no_video:
+                        combobox_type = 'audio'
+                        self.no_video_list.append(f)
+                        self.audio_format_selection_comboBox.addItem(text)
+                        index = self.audio_format_selection_comboBox.count() - 1
+
+                    else:
+                        combobox_type = 'media'
+                        self.video_audio_list.append(f)
+                        self.media_comboBox.addItem(text)
+                        index = self.media_comboBox.count() - 1
+
+                    url_ext = self.getFileExtension(f['url'])
+                    # we can't get size of file from m3u8 format.
+                    if not (size_available) and url_ext != 'm3u8':
+                        size_fetcher = FileSizeFetcherThread(input_dict, text, combobox_type, index)
                         self.threadPool[str(i)] = {'thread': size_fetcher, 'item_id': i}
                         self.parent.threadPool.append(size_fetcher)
                         self.parent.threadPool[-1].start()
                         self.parent.threadPool[-1].FOUND.connect(self.findFileSize)
-
-                    # Add current format to the related comboboxes
-                    if no_audio:
-                        self.no_audio_list.append(f)
-                        self.video_format_selection_comboBox.addItem(text)
-
-                    elif no_video:
-                        self.no_video_list.append(f)
-                        self.audio_format_selection_comboBox.addItem(text)
-
-                    else:
-                        self.video_audio_list.append(f)
-                        self.media_comboBox.addItem(text)
 
                     i = i + 1
 
@@ -542,6 +606,7 @@ class VideoFinderAddLink(AddLinkWindow):
                 # video and audio are not separate
                 elif len(self.video_audio_list) != 0:
                     self.media_comboBox.setCurrentIndex(len(self.video_audio_list) - 1)
+                    self.mediaSelectionChanged('video_audio', int(self.media_comboBox.currentIndex()))
 
                 if len(self.no_audio_list) != 0:
                     self.video_format_selection_comboBox.setCurrentIndex(len(self.no_audio_list))
@@ -575,11 +640,16 @@ class VideoFinderAddLink(AddLinkWindow):
 
     def findFileSize(self, result):
         try:
-            item_id = self.threadPool[str(result['thread_key'])]['item_id']
+            index = result['index']
+            text = result['text']
             if result['file_size'] and result['file_size'] != '0':
-                text = self.media_comboBox.itemText(item_id)
-                if text != 'Best quality':
-                    self.media_comboBox.setItemText(item_id, '{} - {}'.format(text, result['file_size']))
+                if result['combobox_type'] == 'audio':
+                    self.audio_format_selection_comboBox.setItemText(index, '{} - {}'.format(text, result['file_size']))
+                elif result['combobox_type'] == 'video':
+                    self.video_format_selection_comboBox.setItemText(index, '{} - {}'.format(text, result['file_size']))
+                else:
+                    self.media_comboBox.setItemText(index, '{} - {}'.format(text, result['file_size']))
+
         except Exception as ex:
             logger.sendToLog(ex, "ERROR")
 
@@ -592,7 +662,7 @@ class VideoFinderAddLink(AddLinkWindow):
     # This method collects additional information like proxy ip, user, password etc.
     def collectMoreOptions(self):
         options = {'ip': None, 'port': None, 'proxy_user': None, 'proxy_passwd': None, 'download_user': None,
-                   'download_passwd': None, 'proxy_type': None}
+                   'download_passwd': None, 'proxy_type': None, 'load_cookies': None}
 
         if self.proxy_checkBox.isChecked():
 
@@ -619,8 +689,11 @@ class VideoFinderAddLink(AddLinkWindow):
             options['download_user'] = self.download_user_lineEdit.text()
             options['download_passwd'] = self.download_pass_lineEdit.text()
 
+        if self.load_cookies_lineEdit.text() != '':
+            options['load_cookies'] = self.load_cookies_lineEdit.text()
+
         # These info (keys) are required for spider to find file size, because spider() does not check if key exists.
-        additional_info = ['header', 'load_cookies', 'user_agent', 'referer', 'out']
+        additional_info = ['header', 'user_agent', 'referer', 'out']
         for i in additional_info:
 
             if i not in self.plugin_add_link_dictionary.keys():
@@ -630,7 +703,7 @@ class VideoFinderAddLink(AddLinkWindow):
 
     # user submitted information by pressing ok_pushButton, so get information
     # from VideoFinderAddLink window and return them to the mainwindow with callback!
-    def okButtonPressed(self, download_later, button=None):
+    def okButtonPressed(self, download_later, button=None): # noqa
 
         link_list = []
         # separate audio format and video format is selected.

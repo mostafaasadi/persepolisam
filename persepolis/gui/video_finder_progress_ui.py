@@ -25,8 +25,8 @@ except:
 
 
 class VideoFinderProgressWindow_Ui(ProgressWindow_Ui):
-    def __init__(self, persepolis_setting):
-        super().__init__(persepolis_setting)
+    def __init__(self, persepolis_setting, parent):
+        super().__init__(persepolis_setting, parent)
 
         # status_tab
         self.status_tab = QWidget()
@@ -49,8 +49,16 @@ class VideoFinderProgressWindow_Ui(ProgressWindow_Ui):
         # set status_tab as default tab
         self.progress_tabWidget.setCurrentIndex(2)
 
-        # labels
+        # hide limit speed
+        self.limit_frame.setVisible(False)
 
+        # hide pause_pushButton
+        self.pause_pushButton.setVisible(False)
+
+        # hide resume_pushButton
+        self.resume_pushButton.setVisible(False)
+
+        # labels
         self.video_status_label.setText(QCoreApplication.translate(
             "video_finder_progress_ui_tr", "<b>Video file status: </b>"))
         self.audio_status_label.setText(QCoreApplication.translate(

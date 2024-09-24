@@ -13,17 +13,28 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from persepolis.scripts.useful_tools import humanReadableSize
-from requests.cookies import cookiejar_from_dict
+from persepolis.scripts.useful_tools import humanReadableSize, headerToDict, readCookieJar
 from persepolis.constants import VERSION
-from http.cookies import SimpleCookie
 import requests
 from pathlib import Path
 from urllib.parse import urlparse, unquote
+try:
+    from PySide6.QtCore import QSettings
+except:
+    from PyQt5.QtCore import QSettings
 
 
 # for more information about "requests" library , please see
 # http://docs.python-requests.org/en/master/
+
+# load persepolis_settings
+persepolis_setting = QSettings('persepolis_download_manager', 'persepolis')
+# check certificate
+if str(persepolis_setting.value('settings/dont-check-certificate')) == 'yes':
+    check_certificate = False
+else:
+    check_certificate = True
+timeout = int(persepolis_setting.value('settings/timeout'))
 
 
 def getFileNameFromLink(link):
@@ -37,10 +48,9 @@ def getFileNameFromLink(link):
 
     return file_name
 
+
 # spider function finds name of file and file size from header
-
-
-def spider(add_link_dictionary):
+def spider(add_link_dictionary):# noqa
 
     # get user's download request from add_link_dictionary
     link = add_link_dictionary['link']
@@ -54,7 +64,7 @@ def spider(add_link_dictionary):
     header = add_link_dictionary['header']
     out = add_link_dictionary['out']
     user_agent = add_link_dictionary['user_agent']
-    raw_cookies = add_link_dictionary['load_cookies']
+    load_cookies = add_link_dictionary['load_cookies']
     referer = add_link_dictionary['referer']
 
     # define a requests session
@@ -81,12 +91,16 @@ def spider(add_link_dictionary):
         requests_session.auth = (download_user, download_passwd)
 
     # set cookies
-    if raw_cookies:
-        cookie = SimpleCookie()
-        cookie.load(raw_cookies)
+    if load_cookies:
+        jar = readCookieJar(load_cookies)
+        if jar:
+            requests_session.cookies = jar
 
-        cookies = {key: morsel.value for key, morsel in cookie.items()}
-        requests_session.cookies = cookiejar_from_dict(cookies)
+    if header is not None:
+        # convert header to dictionary
+        dict_ = headerToDict(header)
+        # update headers
+        requests_session.headers.update(dict_)
 
     # set referer
     if referer:
@@ -104,7 +118,7 @@ def spider(add_link_dictionary):
 
     # find headers
     try:
-        response = requests_session.head(link, timeout=2.50, allow_redirects=True)
+        response = requests_session.head(link, allow_redirects=True, timeout=timeout, verify=check_certificate)
         header = response.headers
     except:
         header = {}
@@ -147,6 +161,7 @@ def spider(add_link_dictionary):
         file_size_with_unit = 'None'
 
     requests_session.close()
+
     # return results
     return filename, file_size_with_unit
 

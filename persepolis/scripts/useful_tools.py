@@ -16,6 +16,7 @@
 from persepolis.constants.Os import OS
 import urllib.parse
 import subprocess
+import requests
 import platform
 import textwrap
 import time
@@ -100,12 +101,14 @@ def humanReadableSize(size, input_type='file_size'):
 
     if i > 1:
         return round(size, 2), labels[i]
-    elif i == 1:
+    elif i == 1 and input_type == 'speed':
         return round(size, 1), labels[i]
     else:
         return round(size, None), labels[i]
 
 # this function converts second to hour and minute
+
+
 def convertTime(time):
     minutes = int(time // 60)
     if minutes == 0:
@@ -120,7 +123,6 @@ def convertTime(time):
 
 # this function converts human readable size to byte
 def convertToByte(file_size):
-
     # if unit is not in Byte
     if file_size[-2:] != ' B':
 
@@ -237,7 +239,7 @@ def muxer(parent, video_finder_dictionary):
     audio_file_path = audio_file_dictionary['download_path']
     final_path = video_finder_dictionary['download_path']
 
-    # calculate final file's size
+    # calculate final file size
     video_file_size = parent.persepolis_db.searchGidInDownloadTable(video_finder_dictionary['video_gid'])['size']
     audio_file_size = parent.persepolis_db.searchGidInDownloadTable(video_finder_dictionary['audio_gid'])['size']
 
@@ -310,7 +312,8 @@ def muxer(parent, video_finder_dictionary):
                 result_dictionary['error'] = 'no error'
 
                 result_dictionary['final_path'] = final_path_plus_name
-                result_dictionary['final_size'] = humanReadableSize(final_file_size)
+                file_size, file_size_unit = humanReadableSize(final_file_size)
+                result_dictionary['final_size'] = str(file_size) + ' ' + str(file_size_unit)
 
             else:
                 result_dictionary['error'] = 'ffmpeg error'
@@ -518,3 +521,57 @@ def getExecPath():
 def nowDate():
     date = time.strftime("%Y/%m/%d , %H:%M:%S")
     return date
+
+
+def fold(header):
+    line = "%s: %s" % (header[0], header[1])
+    if len(line) < 998:
+        return line
+    # fold
+    else:
+        lines = [line]
+        while len(lines[-1]) > 998:
+            split_this = lines[-1]
+            # find last space in longest chunk admissible
+            split_here = split_this[:998].rfind(" ")
+            del lines[-1]
+            lines = lines + [split_this[:split_here],
+                             split_this[split_here:]]  # this may still be too long
+        # hence the while on lines[-1]
+        return "\n".join(lines)
+
+
+def dictToHeader(data):
+    return "\n".join((fold(header) for header in data.items()))
+
+
+# this method get http header as string and convert it to dictionary
+def headerToDict(headers):
+    dic = {}
+    for line in headers.split("\n"):
+        if line.startswith(("GET", "POST")):
+            continue
+        point_index = line.find(":")
+        dic[line[:point_index].strip()] = line[point_index + 1:].strip()
+
+    return dic
+
+
+def readCookieJar(load_cookies):
+    jar = None
+    if os.path.isfile(load_cookies):
+        # Open cookie file
+        cookies_txt = open(load_cookies, 'r')
+
+        # Initialize RequestsCookieJar
+        jar = requests.cookies.RequestsCookieJar()
+
+        for line in cookies_txt.readlines():
+            words = line.split()
+
+            # Filter out lines that don't contain cookies
+            if (len(words) == 7) and (words[0] != "#"):
+                # Split cookies into the appropriate parameters
+                jar.set(words[5], words[6], domain=words[0], path=words[2])
+
+        return jar

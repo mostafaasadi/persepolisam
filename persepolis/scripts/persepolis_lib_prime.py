@@ -20,9 +20,7 @@ import random
 import threading
 import os
 import errno
-from requests.cookies import cookiejar_from_dict
-from http.cookies import SimpleCookie
-from persepolis.scripts.useful_tools import convertTime, humanReadableSize, freeSpace
+from persepolis.scripts.useful_tools import convertTime, humanReadableSize, freeSpace, headerToDict, readCookieJar
 from persepolis.scripts.osCommands import makeDirs, moveFile
 from persepolis.scripts import logger
 from persepolis.scripts.bubble import notifySend
@@ -59,7 +57,7 @@ class Download():
         self.download_passwd = add_link_dictionary['download_passwd']
         self.header = add_link_dictionary['header']
         self.user_agent = add_link_dictionary['user_agent']
-        self.raw_cookies = add_link_dictionary['load_cookies']
+        self.load_cookies = add_link_dictionary['load_cookies']
         self.referer = add_link_dictionary['referer']
         self.start_time = add_link_dictionary['start_time']
         self.end_time = add_link_dictionary['end_time']
@@ -87,17 +85,6 @@ class Download():
         self.number_of_active_connections = self.number_of_threads
 
         self.thread_list = []
-
-    # this method get http header as string and convert it to dictionary
-    def convertHeaderToDictionary(headers):
-        dic = {}
-        for line in headers.split("\n"):
-            if line.startswith(("GET", "POST")):
-                continue
-            point_index = line.find(":")
-            dic[line[:point_index].strip()] = line[point_index + 1:].strip()
-
-        return dic
 
     # create requests session
     def createSession(self):
@@ -128,12 +115,10 @@ class Download():
                                           self.download_passwd)
 
         # set cookies
-        if self.raw_cookies:
-            cookie = SimpleCookie()
-            cookie.load(self.raw_cookies)
-
-            cookies = {key: morsel.value for key, morsel in cookie.items()}
-            self.requests_session.cookies = cookiejar_from_dict(cookies)
+        if self.load_cookies:
+            jar = readCookieJar(self.load_cookies)
+            if jar:
+                self.requests_session.cookies = jar
 
         # set referer
         if self.referer:
@@ -153,7 +138,7 @@ class Download():
 
         if self.header is not None:
             # convert header to dictionary
-            dict_ = self.convertHeaderToDictionary(self.header)
+            dict_ = headerToDict(self.header)
             # update headers
             self.requests_session.headers.update(dict_)
 
@@ -308,38 +293,38 @@ class Download():
                 with open(self.control_json_file_path, 'x') as f:
                     f.write("")
 
-        except Exception:
-            # so the control file is already exists
-            # read control file
-            with open(self.control_json_file_path, "r") as f:
+            else:
+                # so the control file is already exists
+                # read control file
+                with open(self.control_json_file_path, "r") as f:
 
-                try:
-                    # save json file information in dictionary format
-                    data_dict = json.load(f)
+                    try:
+                        # save json file information in dictionary format
+                        data_dict = json.load(f)
 
-                    # check if the download is duplicated
-                    # If download item is duplicated, so resume download
-                    # check ETag
-                    if 'ETag' in data_dict:
+                        # check if the download is duplicated
+                        # If download item is duplicated, so resume download
+                        # check ETag
+                        if 'ETag' in data_dict:
 
-                        if data_dict['ETag'] == self.etag:
-                            self.resume = True
+                            if data_dict['ETag'] == self.etag:
+                                self.resume = True
+                            else:
+                                self.resume = False
+
+                        # if ETag is not available, then check file size
+                        elif 'file_size' in data_dict:
+
+                            if data_dict['file_size'] == self.file_size:
+                                self.resume = True
+                            else:
+                                self.resume = False
                         else:
                             self.resume = False
 
-                    # if ETag is not available, then check file size
-                    elif 'file_size' in data_dict:
-
-                        if data_dict['file_size'] == self.file_size:
-                            self.resume = True
-                        else:
-                            self.resume = False
-                    else:
+                    # control file is corrupted.
+                    except Exception:
                         self.resume = False
-
-                # control file is corrupted.
-                except Exception:
-                    self.resume = False
 
         # check if uncomplete download file exists
         if os.path.isfile(self.file_path):
@@ -876,7 +861,7 @@ class Download():
 
     # This method returns download status
     def tellStatus(self):
-        downloded_size, downloaded_size_unit = humanReadableSize(self.downloaded_size)
+        downloaded_size, downloaded_size_unit = humanReadableSize(self.downloaded_size)
         if self.file_size:
             file_size, file_size_unit = humanReadableSize(self.file_size)
         else:
@@ -889,7 +874,7 @@ class Download():
             'file_name': self.file_name,
             'status': self.download_status,
             'size': str(file_size) + ' ' + file_size_unit,
-            'downloaded_size': str(downloded_size) + ' ' + downloaded_size_unit,
+            'downloaded_size': str(downloaded_size) + ' ' + downloaded_size_unit,
             'percent': str(self.download_percent) + '%',
             'connections': str(self.number_of_active_connections),
             'rate': self.download_speed_str,
